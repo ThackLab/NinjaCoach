@@ -662,3 +662,87 @@ cg-board square.nc-covered {
 .st-think {
   margin-top: 10px;
 }
+
+/* ---------------------------------------------------------------- Review: named tabs and bigger text */
+.rv-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  flex: none;
+}
+.rv-tabs button {
+  flex: 1;
+  padding: 10px 6px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-faint);
+  font: inherit;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+.rv-tabs button.on {
+  background: var(--surface-3);
+  color: var(--text);
+}
+.review-panel .coach-title {
+  font-size: 1.3rem;
+  line-height: 1.3;
+}
+.review-panel .coach-text,
+.review-panel .coach-hint {
+  font-size: 1.06rem;
+  line-height: 1.55;
+  color: var(--text-soft);
+}
+.review-panel .rv-moves {
+  font-size: 1.02rem;
+}
+@media (max-width: 900px) {
+  /* Leave the panel at least about a third of the screen on tall screens. */
+  .focus-screen.review-screen .board-column {
+    --board: min(calc(100vw - var(--evalbar, 0px)), calc(100dvh - 104px - 96px - 30dvh));
+  }
+}
+@media (min-width: 600px) and (max-width: 900px) {
+  /* Tablets held upright: bigger still. */
+  .rv-tabs button {
+    font-size: 1.1rem;
+    padding: 12px 8px;
+  }
+  .review-panel .coach-title {
+    font-size: 1.55rem;
+  }
+  .review-panel .coach-text,
+  .review-panel .coach-hint {
+    font-size: 1.22rem;
+  }
+  .review-panel .rv-moves {
+    font-size: 1.15rem;
+  }
+}
+/* The workshop's choices wrap onto a second line instead of scrolling sideways. */
+.review-panel .shop-tabs {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+.review-panel .shop-tabs button {
+  font-size: 0.95rem;
+  padding: 8px 14px;
+}
+.review-panel .shop-steps li,
+.review-panel .shop-outcome {
+  font-size: 1.02rem;
+}
+@media (min-width: 600px) and (max-width: 900px) {
+  .review-panel .shop-tabs button {
+    font-size: 1.08rem;
+    padding: 10px 16px;
+  }
+  .review-panel .shop-steps li,
+  .review-panel .shop-outcome {
+    font-size: 1.15rem;
+  }
+}

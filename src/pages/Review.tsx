@@ -147,6 +147,11 @@ export function ReviewPage({
   const job = useReviewer((s) => s.jobs[gameId]);
   const [cur, setCur] = useState(-1);
   const [flipped, setFlipped] = useState(false);
+  // The panel under the board, one named tab at a time instead of one long scroll.
+  const [tab, setTab] = useState<'coach' | 'summary' | 'moves' | 'ask'>('coach');
+  const aiKey = useSettings((st) => st.aiCoachKey);
+  // Stepping to another move brings the coach back.
+  useEffect(() => setTab((t) => (t === 'ask' ? t : 'coach')), [cur]);
   const [showBest, setShowBest] = useState(true);
   const [line, setLine] = useState<{ base: string; moves: string[]; idx: number } | null>(null);
   const [retry, setRetry] = useState<RetryState | null>(null);
@@ -1056,6 +1061,18 @@ export function ReviewPage({
           </button>
         </div>
 
+        {review && !guided && !intro && (
+          <div className="rv-tabs" role="tablist">
+            {([['coach', 'Coach'], ['summary', 'Summary'], ['moves', 'Moves'], ...(aiKey ? [['ask', 'Ask']] : [])] as [typeof tab, string][]).map(
+              ([k, label]) => (
+                <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>
+                  {label}
+                </button>
+              ),
+            )}
+          </div>
+        )}
+
         <div className="panel-body" ref={bodyRef}>
           {running && (
             <div style={{ marginBottom: 14 }}>
@@ -1075,7 +1092,7 @@ export function ReviewPage({
           {job?.status === 'error' && <div className="error-box">Review failed: {job.error}</div>}
           {review === null && !job && <div className="muted">Preparing review…</div>}
 
-          {line && (
+          {line && (tab === 'coach' || guided || intro) && (
             <div className="line-card">
               <button className="icon-btn" onClick={() => setLine({ ...line, idx: Math.max(0, line.idx - 1) })} aria-label="Back">
                 <ChevronLeft size={18} />
@@ -1098,9 +1115,9 @@ export function ReviewPage({
             </div>
           )}
 
-          {panel}
+          {(tab === 'coach' || guided || intro) && panel}
 
-          {review && cur === -1 && !guided && !intro && (
+          {review && !guided && !intro && (tab === 'summary' || (tab === 'coach' && cur === -1)) && (
             <>
               {!game.userColor && (
                 <div className="row card" style={{ marginBottom: 12, padding: 10, background: 'var(--panel-2)' }}>
@@ -1119,32 +1136,35 @@ export function ReviewPage({
             </>
           )}
 
-          {points.length > 1 && !guided && !intro && (
+          {points.length > 1 && !guided && !intro && tab === 'summary' && (
             <div style={{ marginTop: 14 }}>
               <EvalGraph points={points} current={cur + 1} onSelect={(i) => review && go(i - 1)} height={70} />
             </div>
           )}
 
-          {review && !guided && (
-            <div style={{ marginTop: 12 }} className="only-desktop">
+          {review && !guided && (intro || tab === 'moves') && (
+            <div style={{ marginTop: 4 }} className={intro ? 'only-desktop' : 'rv-moves'}>
               <MoveList
                 sans={moves.map((x) => x.san)}
                 startFen={game.startFen}
                 current={cur}
-                onSelect={go}
+                onSelect={(i) => {
+                  go(i);
+                  setTab('coach');
+                }}
                 classes={moves.map((x) => x.classification)}
               />
             </div>
           )}
 
-          {review && !guided && !intro && (
-            <div style={{ marginTop: 14 }}>
+          {review && !guided && !intro && tab === 'ask' && (
+            <div style={{ marginTop: 4 }}>
               <AiCoachChat key={gameId} game={game} review={review} ply={cur} />
             </div>
           )}
         </div>
 
-        {review && !guided && (
+        {review && !guided && intro && (
           <MoveStrip
             sans={moves.map((x) => x.san)}
             startFen={game.startFen}

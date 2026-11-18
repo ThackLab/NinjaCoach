@@ -1,7 +1,7 @@
 {
   "name": "ninjacoach",
   "private": true,
-  "version": "1.2.0",
+  "version": "1.2.1",
   "type": "module",
   "description": "Ninja Coach: a chess coach that reviews all your chess.com games and teaches you from them.",
   "license": "GPL-3.0-or-later",
