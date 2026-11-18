@@ -10,6 +10,7 @@ A chess coach for your chess.com games. Give it your chess.com username and it d
   - **Your turn:** you play the better line yourself and the coach plays the replies.
   - **Tinker:** try any move; the engine answers and tells you what it does.
 - **Moments:** every brilliant move, great move, blunder, mistake and missed win across all your games, in one list. Tap one to go straight to that position with **Show me**.
+- **Mate drill:** every forced mate you missed (up to mate in 5), or got to the long way round, becomes a puzzle. You get a few a day. Try it first, with hints if you want them; the engine plays their best defence. Then the coach walks you through how you could have seen it: count the king's squares, try every check, follow each forcing move and its reply, and see why the final position is mate. Miss one and it comes back tomorrow until you get it.
 - **Progress:** accuracy month by month, blunders per game, your chess.com rating, where your points go (opening, middlegame, endgame), the mistakes that keep coming back, openings, and how often you convert winning positions.
 - **One habit to work on:** the one that costs you the most over your last twelve games, whether it is coming up less often, and a link to practise it on positions from your own games.
 

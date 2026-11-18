@@ -356,3 +356,39 @@ body {
 .nm-game {
   font-size: 0.76rem !important;
 }
+
+/* Mate drill: the king, the squares it can run to, and the squares you cover. */
+cg-board square.nc-king {
+  box-shadow: inset 0 0 0 4px rgba(250, 65, 45, 0.85);
+}
+cg-board square.nc-flight {
+  background-color: rgba(61, 220, 132, 0.5);
+}
+cg-board square.nc-covered {
+  background-color: rgba(250, 65, 45, 0.35);
+}
+.mate-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 10px;
+  font-size: 0.82rem;
+}
+.mate-legend i {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  vertical-align: -1px;
+  margin-right: 4px;
+}
+.mate-legend i.nc-flight {
+  background: rgba(61, 220, 132, 0.7);
+}
+.mate-legend i.nc-covered {
+  background: rgba(250, 65, 45, 0.55);
+}
+.nc-mates b::before {
+  content: '♚ ';
+  color: var(--accent);
+}

@@ -4,6 +4,7 @@ import { createStore, del, entries, get, set, setMany, clear, type UseStore } fr
 import type { Color } from 'chess.js';
 import type { Classification, GameReview } from '../review/types';
 import { gist } from '../coach/gist';
+import { findMateChances, type MateChance } from '../coach/mates';
 
 export type GameSource = 'bot' | 'import' | 'analysis' | 'pgn' | 'local' | 'online';
 export type GameResult = '1-0' | '0-1' | '1/2-1/2' | '*';
@@ -134,7 +135,13 @@ export interface GameSummary {
   counts: Partial<Record<Classification, number>>;
   accuracy: number;
   moments: Moment[];
+  /** Mates you had and didn't take (or took the long way round). */
+  mates?: MateChance[];
+  /** Summaries from an older version are made again. */
+  v?: number;
 }
+
+const SUMMARY_VERSION = 2;
 
 const KEEP: Classification[] = ['brilliant', 'great', 'miss', 'mistake', 'blunder'];
 
@@ -145,11 +152,13 @@ export function summarise(g: GameRecord, review: GameReview): GameSummary {
   for (const m of mine) counts[m.classification] = (counts[m.classification] ?? 0) + 1;
   return {
     gameId: g.id,
+    v: SUMMARY_VERSION,
     counts,
     accuracy: (color === 'w' ? review.white : review.black).accuracy,
     moments: mine
       .filter((m) => KEEP.includes(m.classification))
       .map((m) => ({ ply: m.ply, cls: m.classification, san: m.san, headline: m.headline, why: gist(m.comment), epLoss: m.epLoss })),
+    mates: findMateChances(g.id, review, color),
   };
 }
 
@@ -159,7 +168,7 @@ export async function listSummaries(): Promise<GameSummary[]> {
 
 /** Makes summaries for reviewed games that don't have one (e.g. after you say which side you were). */
 export async function fillSummaries(): Promise<void> {
-  const have = new Set((await entries<string, GameSummary>(summaries)).map(([k]) => k));
+  const have = new Set((await entries<string, GameSummary>(summaries)).filter(([, s]) => (s.v ?? 1) >= SUMMARY_VERSION).map(([k]) => k));
   for (const [id, g] of await entries<string, GameRecord>(games)) {
     if (have.has(id) || !g.userColor || !g.reviewedAt) continue;
     const r = await get<GameReview>(id, reviews);

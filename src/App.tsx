@@ -15,18 +15,20 @@ const SettingsPage = lazy(() => import('./pages/Settings').then((m) => ({ defaul
 const InsightsPage = lazy(() => import('./pages/Insights').then((m) => ({ default: m.InsightsPage })));
 const GamesPage = lazy(() => import('./pages/Games').then((m) => ({ default: m.GamesPage })));
 const MomentsPage = lazy(() => import('./pages/Moments').then((m) => ({ default: m.MomentsPage })));
+const MatesPage = lazy(() => import('./pages/Mates').then((m) => ({ default: m.MatesPage })));
 const LATER = [
   () => import('./pages/Review'),
   () => import('./pages/Games'),
   () => import('./pages/Moments'),
   () => import('./pages/Insights'),
   () => import('./pages/Practice'),
+  () => import('./pages/Mates'),
   () => import('./pages/Analysis'),
   () => import('./pages/Settings'),
 ];
 
 /** Board screens take the whole phone screen (no bars). */
-const isFocus = (root?: string) => root === 'review' || root === 'analysis';
+const isFocus = (root?: string) => root === 'review' || root === 'analysis' || root === 'mates';
 
 export function App() {
   const route = useRoute();
@@ -73,6 +75,9 @@ export function App() {
         break;
       case 'progress':
         page = <InsightsPage />;
+        break;
+      case 'mates':
+        page = <MatesPage />;
         break;
       case 'practice':
         page = <PracticePage />;

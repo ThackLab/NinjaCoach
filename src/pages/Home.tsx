@@ -14,6 +14,7 @@ import { useReviewer } from '../state/reviewer';
 import { useRecentReviews, useSummaries } from '../state/summaries';
 import { useLibrary, useSync } from '../state/sync';
 import { usePracticeDue } from '../state/practice';
+import { useMateDrill } from '../state/mates';
 import { ResultChip, when } from './Games';
 
 const SHOWN: Classification[] = ['brilliant', 'great', 'best', 'excellent', 'good', 'book', 'inaccuracy', 'mistake', 'miss', 'blunder'];
@@ -27,6 +28,7 @@ export function HomePage() {
   const recent = useRecentReviews(12);
   const job = useReviewer((s) => Object.values(s.jobs).find((j) => j.status === 'running'));
   const due = usePracticeDue();
+  const mates = useMateDrill();
 
   const total = games?.length ?? 0;
   const latest = games?.find((g) => g.reviewedAt && !sync.debriefed[g.id]);
@@ -127,7 +129,9 @@ export function HomePage() {
 
       {last20.length > 0 && (
         <>
-          <SectionTitle action={{ label: 'All games', href: '#/games' }}>{`Your last ${last20.length} games`}</SectionTitle>
+          <SectionTitle action={{ label: 'All games', href: '#/games' }}>
+            {last20.length === 1 ? 'Your last game' : `Your last ${last20.length} games`}
+          </SectionTitle>
           <section className="card-box nc-tally">
             <div className="nt-head">
               <span>
@@ -161,6 +165,17 @@ export function HomePage() {
         <HabitCard h={habit} />
       ) : (
         <p className="faint nc-empty">Once a few games are reviewed, your coach picks the habit that costs you the most.</p>
+      )}
+      {mates && mates.all.length > 0 && (
+        <button className="nc-link nc-mates" onClick={() => navigate('/mates')}>
+          <b>Mate drill</b>
+          <span className="faint">
+            {mates.queue.length
+              ? `${mates.queue.length} mate${mates.queue.length === 1 ? '' : 's'} from your games to find today`
+              : `Done for today · ${mates.all.length} mate${mates.all.length === 1 ? '' : 's'} found in your games`}
+          </span>
+          <ChevronRight size={18} />
+        </button>
       )}
       {due > 0 && (
         <button className="nc-link" onClick={() => navigate('/practice')}>
