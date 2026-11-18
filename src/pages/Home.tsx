@@ -63,11 +63,8 @@ export function HomePage() {
         <section className="card-box nc-status">
           {sync.syncing ? (
             <>
-              <b>Fetching your games from chess.com…</b>
-              <span className="faint">
-                {sync.fetched ? `Month ${Math.min(sync.fetched.done + 1, sync.fetched.total)} of ${sync.fetched.total}` : 'Looking up your account'} ·{' '}
-                {total} games so far
-              </span>
+              <b>Fetching your last 20 games from chess.com…</b>
+              <span className="faint">{sync.fetched?.done ? `${sync.fetched.done} of ${sync.fetched.total} found` : 'Looking up your account'}</span>
               {sync.fetched && (
                 <div className="progress">
                   <div style={{ width: `${(100 * sync.fetched.done) / Math.max(1, sync.fetched.total)}%` }} />
@@ -187,7 +184,7 @@ export function HomePage() {
 
       {ratings.length > 1 && (
         <>
-          <SectionTitle action={{ label: 'Progress', href: '#/progress' }}>Your chess.com rating</SectionTitle>
+          <SectionTitle action={{ label: 'All stats', href: '#/stats' }}>Your chess.com rating</SectionTitle>
           <section className="card-box nc-rating">
             <div className="nr-head">
               <b>{ratings[ratings.length - 1]}</b>

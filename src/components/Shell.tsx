@@ -30,7 +30,7 @@ const TABS = [
   { path: '/', label: 'Coach', icon: <Sparkles size={22} /> },
   { path: '/games', label: 'Games', icon: <ListChecks size={22} /> },
   { path: '/moments', label: 'Moments', icon: <Target size={22} /> },
-  { path: '/progress', label: 'Progress', icon: <BarChart3 size={22} /> },
+  { path: '/stats', label: 'Stats', icon: <BarChart3 size={22} /> },
 ];
 
 export function TabBar({ path }: { path: string }) {

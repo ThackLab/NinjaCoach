@@ -13,6 +13,14 @@ export interface TreeNode {
   uci?: string;
   comment?: string;
   nags?: number[];
+  /** Clock left after this move (ms), from a "[%clk 0:09:58.4]" comment. */
+  clock?: number;
+}
+
+/** "[%clk 0:09:58.4]" -> milliseconds left. */
+export function clockMs(comment?: string): number | null {
+  const m = comment?.match(/\[%clk\s+(?:(\d+):)?(\d+):(\d+(?:\.\d+)?)\]/);
+  return m ? Math.round(((+(m[1] ?? 0) * 60 + +m[2]) * 60 + +m[3]) * 1000) : null;
 }
 
 export interface GameTree {
@@ -245,6 +253,8 @@ function buildTree(tokens: Token[], headers: Record<string, string>): ParsedGame
   for (const tok of tokens) {
     switch (tok.t) {
       case 'comment': {
+        const clk = clockMs(tok.text);
+        if (clk !== null && cur !== tree.rootId) tree.nodes[cur] = { ...tree.nodes[cur], clock: clk };
         const text = tok.text.replace(/\[%[^\]]*\]/g, '').trim();
         if (!text) break;
         if (cur === tree.rootId && !tree.nodes[cur].children.length) pendingComment = text;

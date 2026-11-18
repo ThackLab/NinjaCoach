@@ -52,7 +52,7 @@ export function SettingsPage() {
       <div className="settings-grid">
         <section className="card">
           <h2>chess.com</h2>
-          <Row title="Your username" desc="Your coach brings in every game this player has played on chess.com.">
+          <Row title="Your username" desc="Your coach keeps this player's last 20 games on chess.com.">
             <form
               className="row"
               onSubmit={(e) => {
@@ -102,7 +102,7 @@ export function SettingsPage() {
 
         <section className="card">
           <h2>Game review</h2>
-          <Row title="Review depth" desc="For your latest games. Older games are reviewed at Fast so the whole history gets done.">
+          <Row title="Review depth" desc="Deeper is more accurate but slower">
             <Segmented
               value={s.reviewDepth}
               onChange={(reviewDepth) => s.set({ reviewDepth })}

@@ -2,7 +2,7 @@
 // game. Used by the Import page and by the coach, which watches a chess.com
 // account (src/state/coach.ts).
 import { Chess } from 'chess.js';
-import { mainlineMoves, parsePgn, type ParsedGame } from './chess/pgn';
+import { clockMs, mainline, mainlineMoves, parsePgn, type ParsedGame } from './chess/pgn';
 import { getOpeningBook } from './chess/openings';
 import type { GameRecord } from './storage/db';
 
@@ -196,6 +196,14 @@ export function normaliseTermination(raw?: string): string | undefined {
   return undefined;
 }
 
+export { clockMs };
+
+/** "600+5" -> 600 seconds with 5 added a move; daily games ("1/86400") have no clock. */
+export function parseTimeControl(tc?: string): { base: number; inc: number } | undefined {
+  const m = tc?.match(/^(\d+)(?:\+(\d+(?:\.\d+)?))?$/);
+  return m ? { base: +m[1], inc: +(m[2] ?? 0) } : undefined;
+}
+
 export function toRecord(c: Candidate, user?: string): GameRecord | null {
   const parsed = parsePgn(c.pgn)[0];
   if (!parsed) return null;
@@ -209,6 +217,9 @@ export function toRecord(c: Candidate, user?: string): GameRecord | null {
     chess.move({ from: m.slice(0, 2), to: m.slice(2, 4), promotion: m[4] });
     fens.push(chess.fen());
   }
+  const clock = parseTimeControl(parsed.headers.TimeControl);
+  const times = mainline(parsed.tree).map((n) => n.clock ?? null);
+  const clocks = clock && times.length && times.every((t) => t !== null) ? (times as number[]) : undefined;
   return {
     id: `imp-${c.site}-${c.key}`.replace(/[^a-zA-Z0-9-]/g, '').slice(0, 80),
     createdAt: c.endTime ?? Date.now(),
@@ -222,6 +233,8 @@ export function toRecord(c: Candidate, user?: string): GameRecord | null {
     sans,
     pgn: c.pgn,
     timeControl: c.timeClass ?? parsed.headers.TimeControl,
+    clock,
+    clocks,
     opening: parsed.headers.Opening ?? getOpeningBook()?.classify(fens)?.name,
     userColor,
     url: c.url,

@@ -14,7 +14,7 @@ export function WelcomePage() {
       <img src="./icon-512.png" alt="" className="nc-hero-logo" width={120} height={120} />
       <h1>Ninja Coach</h1>
       <p className="nc-lead">
-        Your chess coach. It reads every game you've played on chess.com, reviews each one with Stockfish, and teaches you from them.
+        Your chess coach. It reads your last 20 games on chess.com, reviews each one with Stockfish, gives you the stats, and teaches you from them.
       </p>
       <ul className="nc-points">
         <li>

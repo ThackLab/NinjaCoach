@@ -12,7 +12,7 @@ const ReviewPage = lazy(() => import('./pages/Review').then((m) => ({ default: m
 const AnalysisPage = lazy(() => import('./pages/Analysis').then((m) => ({ default: m.AnalysisPage })));
 const PracticePage = lazy(() => import('./pages/Practice').then((m) => ({ default: m.PracticePage })));
 const SettingsPage = lazy(() => import('./pages/Settings').then((m) => ({ default: m.SettingsPage })));
-const InsightsPage = lazy(() => import('./pages/Insights').then((m) => ({ default: m.InsightsPage })));
+const StatsPage = lazy(() => import('./pages/Stats').then((m) => ({ default: m.StatsPage })));
 const GamesPage = lazy(() => import('./pages/Games').then((m) => ({ default: m.GamesPage })));
 const MomentsPage = lazy(() => import('./pages/Moments').then((m) => ({ default: m.MomentsPage })));
 const MatesPage = lazy(() => import('./pages/Mates').then((m) => ({ default: m.MatesPage })));
@@ -20,7 +20,7 @@ const LATER = [
   () => import('./pages/Review'),
   () => import('./pages/Games'),
   () => import('./pages/Moments'),
-  () => import('./pages/Insights'),
+  () => import('./pages/Stats'),
   () => import('./pages/Practice'),
   () => import('./pages/Mates'),
   () => import('./pages/Analysis'),
@@ -73,8 +73,9 @@ export function App() {
       case 'moments':
         page = <MomentsPage />;
         break;
+      case 'stats':
       case 'progress':
-        page = <InsightsPage />;
+        page = <StatsPage />;
         break;
       case 'mates':
         page = <MatesPage />;

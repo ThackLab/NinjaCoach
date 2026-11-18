@@ -1,24 +1,21 @@
-// Ninja Coach's link to chess.com: it brings in every game you have played
-// there, newest month first, and reviews them in the background, newest
-// first. Finished months are fetched once; the current month is checked
-// again whenever the app opens or comes back to the front.
+// Ninja Coach's link to chess.com: it keeps your newest 20 games (fetching
+// back through the monthly archives until it has them), reviews them in the
+// background, newest first, and lets older ones drop off as new ones come in.
+// It checks again whenever the app opens or comes back to the front.
 import { useEffect, useState } from 'react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { chessComArchiveGames, chessComArchives, toRecord } from '../lib/importGames';
-import { getGame, listGames, onDbChange, saveGame, type GameRecord } from '../lib/storage/db';
+import { deleteGame, getGame, listGames, onDbChange, saveGame, type GameRecord } from '../lib/storage/db';
 import { useReviewer } from './reviewer';
 import { useSettings } from './settings';
 
 const RECHECK = 10 * 60_000;
-/** Games from the last week are reviewed at the depth chosen in Settings; older ones a little faster. */
-const RECENT = 7 * 86_400_000;
-const BACKLOG_DEPTH = 12;
+/** How many of your latest games the coach keeps and reviews. */
+export const KEEP = 20;
 
 interface SyncState {
   username: string;
-  /** Archive URLs of finished months already brought in. */
-  archivesDone: string[];
   lastSync: number;
   lastError: string;
   syncing: boolean;
@@ -37,41 +34,46 @@ export const useSync = create<SyncState>()(
   persist(
     (set, get) => ({
       username: '',
-      archivesDone: [],
       lastSync: 0,
       lastError: '',
       syncing: false,
       fetched: null,
       lastNew: 0,
       debriefed: {},
-      setUsername: (name) => set({ username: name.trim(), archivesDone: [], lastSync: 0, lastError: '' }),
+      setUsername: (name) => set({ username: name.trim(), lastSync: 0, lastError: '' }),
       markDebriefed: (id) => set((s) => ({ debriefed: { ...s.debriefed, [id]: Date.now() } })),
       sync: async (force = false) => {
         const s = get();
         if (!s.username || s.syncing) return;
         if (!force && Date.now() - s.lastSync < RECHECK) return void reviewBacklog();
-        set({ syncing: true, lastError: '', fetched: null });
+        set({ syncing: true, lastError: '', fetched: { done: 0, total: KEEP } });
         let added = 0;
         try {
-          const archives = await chessComArchives(s.username);
-          const todo = [...archives].reverse().filter((url, i) => i === 0 || !get().archivesDone.includes(url));
-          set({ fetched: { done: 0, total: todo.length } });
-          for (const [i, url] of todo.entries()) {
+          // Newest month first, back until there are 20 games.
+          const archives = [...(await chessComArchives(s.username))].reverse();
+          const found: GameRecord[] = [];
+          for (const url of archives) {
             for (const c of await chessComArchiveGames(url)) {
               const rec = toRecord(c, s.username);
-              if (!rec?.userColor || (await getGame(rec.id))) continue;
+              if (rec?.userColor) found.push(rec);
+            }
+            set({ fetched: { done: Math.min(found.length, KEEP), total: KEEP } });
+            if (found.length >= KEEP) break;
+          }
+          const keep = found.sort((a, b) => b.createdAt - a.createdAt).slice(0, KEEP);
+          for (const rec of keep) {
+            const have = await getGame(rec.id);
+            if (!have) {
               await saveGame(rec);
               added++;
+            } else if (!have.clock && rec.clock) {
+              // Games brought in before clocks were read: add them, keep the review.
+              await saveGame({ ...have, clock: rec.clock, clocks: rec.clocks, termination: rec.termination ?? have.termination });
             }
-            // The newest month can still change; finished months are done for good.
-            const finished = url !== archives[archives.length - 1];
-            set((st) => ({
-              fetched: { done: i + 1, total: todo.length },
-              archivesDone: finished && !st.archivesDone.includes(url) ? [...st.archivesDone, url] : st.archivesDone,
-            }));
-            // Start reviewing as soon as the newest games are in.
-            if (i === 0) void reviewBacklog();
           }
+          // Older games drop off, with their reviews.
+          const ids = new Set(keep.map((r) => r.id));
+          for (const g of await listGames()) if (!ids.has(g.id)) await deleteGame(g.id);
           set({ syncing: false, fetched: null, lastSync: Date.now(), lastNew: added });
         } catch (e) {
           set({ syncing: false, fetched: null, lastSync: Date.now(), lastError: e instanceof Error ? e.message : String(e) });
@@ -81,15 +83,17 @@ export const useSync = create<SyncState>()(
     }),
     {
       name: 'ninjacoach.sync',
-      version: 1,
-      partialize: (s) => ({ username: s.username, archivesDone: s.archivesDone, lastSync: s.lastSync, lastNew: s.lastNew, debriefed: s.debriefed }),
+      // Version 2 keeps only the last 20 games: check again straight away after the update.
+      version: 2,
+      migrate: (old) => ({ ...(old as object), lastSync: 0 }) as SyncState,
+      partialize: (s) => ({ username: s.username, lastSync: s.lastSync, lastNew: s.lastNew, debriefed: s.debriefed }),
     },
   ),
 );
 
 let reviewing = false;
 
-/** Reviews every game that has no review yet, newest first, one at a time. */
+/** Reviews each of your games that has no review yet, newest first, one at a time. */
 export async function reviewBacklog() {
   if (reviewing) return;
   reviewing = true;
@@ -101,9 +105,8 @@ export async function reviewBacklog() {
         .sort((a, b) => b.createdAt - a.createdAt)[0];
       if (!next) break;
       tried.add(next.id);
-      const recent = Date.now() - next.createdAt < RECENT;
       try {
-        await useReviewer.getState().start(next.id, { depth: recent ? useSettings.getState().reviewDepth : BACKLOG_DEPTH });
+        await useReviewer.getState().start(next.id, { depth: useSettings.getState().reviewDepth });
       } catch {
         break;
       }

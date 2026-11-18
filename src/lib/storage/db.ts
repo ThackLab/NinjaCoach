@@ -30,6 +30,8 @@ export interface GameRecord {
   sans: string[];
   pgn: string;
   timeControl?: string;
+  /** Starting time and increment, in seconds, when the game was timed. */
+  clock?: { base: number; inc: number };
   /** Remaining clock (ms) after each ply, when the game was timed. */
   clocks?: number[];
   opening?: string;
@@ -98,6 +100,7 @@ export async function listGames(): Promise<GameRecord[]> {
 export async function deleteGame(id: string) {
   await del(id, games);
   await del(id, reviews);
+  await del(id, summaries);
   const ps = await listPuzzles();
   for (const p of ps) if (p.gameId === id) await del(p.id, puzzles);
   changed();

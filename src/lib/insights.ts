@@ -60,10 +60,7 @@ function scoreFor(g: GameRecord, color: Color): number | null {
   return null;
 }
 
-const initialMsOf = (g: GameRecord) => {
-  const tc = g.timeControl?.match(/^(\d+(?:\.\d+)?)\+/);
-  return tc ? +tc[1] * 60_000 : undefined;
-};
+const initialMsOf = (g: GameRecord) => (g.clock ? g.clock.base * 1000 : undefined);
 
 function period(list: ReviewedGame[]): PeriodStats {
   const scores = list.map((x) => scoreFor(x.game, x.color)).filter((s): s is number => s !== null);
