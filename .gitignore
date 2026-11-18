@@ -1,0 +1,9 @@
+node_modules
+dist
+public/engine
+*.tsbuildinfo
+test-results
+playwright-report
+src/styles/pieces.generated.css
+android/.tools
+android/build
