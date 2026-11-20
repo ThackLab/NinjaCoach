@@ -3,7 +3,7 @@
 A chess coach for your chess.com games. Give it your chess.com username and it does the rest:
 
 - **It keeps your last 20 games**, checks for new ones each time you open the app, and lets older ones drop off.
-- **It reviews each one with Stockfish 18** on your phone, in the background, newest first.
+- **It reviews each one with Stockfish 18** on your phone, in the background, newest first. A row of 20 squares on the coach screen fills in with W, D or L as each game is done. Every position is saved as it's checked, so if the app is closed halfway the review picks up where it stopped, and the screen stays on while it works (you can turn that off).
 - **Each move gets a classification:** Brilliant, Great, Best, Excellent, Good, Book, Inaccuracy, Mistake, Miss or Blunder (chess.com's expected-points thresholds). Each player also gets an accuracy score (the lichess formula) and a game rating estimate.
 - **It debriefs your latest game** like a coach would: how it ended, your best moment and where the game turned. Then each key moment becomes a hands-on workshop:
   - **Watch:** step through what happened, the better move and a couple of other tries, one tap per move, with a caption for each ("their knight forks the king and rook").

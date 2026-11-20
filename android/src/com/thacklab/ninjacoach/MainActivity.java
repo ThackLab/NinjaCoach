@@ -14,6 +14,7 @@ import android.os.Environment;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.MediaStore;
+import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -208,6 +209,18 @@ public class MainActivity extends Activity {
             } catch (NumberFormatException e) {
                 // ignore a malformed pattern
             }
+        }
+
+        /** Keeps the screen on (while the coach reviews), or lets it sleep again. */
+        @JavascriptInterface
+        public void keepScreenOn(final boolean on) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (on) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                }
+            });
         }
 
         @JavascriptInterface

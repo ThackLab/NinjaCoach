@@ -746,3 +746,55 @@ cg-board square.nc-covered {
     font-size: 1.15rem;
   }
 }
+
+/* ---------------------------------------------------------------- the 20-game tally on the coach screen */
+.nc-tally-row {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 4px;
+  margin: 6px 0 4px;
+}
+.nc-tally .nc-tally-row {
+  margin: 4px 0 12px;
+}
+.nc-cell {
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 0;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 6px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.nc-cell.done {
+  border-color: transparent;
+  cursor: pointer;
+}
+.nc-cell.done.w {
+  background: #2f9e8a;
+}
+.nc-cell.done.d {
+  background: #565067;
+}
+.nc-cell.done.l {
+  background: #e8553f;
+}
+.nc-cell.now {
+  border-color: var(--accent);
+  background: linear-gradient(to top, color-mix(in srgb, var(--accent) 70%, transparent) var(--p, 0%), transparent var(--p, 0%));
+  animation: nc-pulse 1.6s ease-in-out infinite;
+}
+@keyframes nc-pulse {
+  50% {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nc-cell.now {
+    animation: none;
+  }
+}

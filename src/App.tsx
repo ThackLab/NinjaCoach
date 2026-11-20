@@ -6,6 +6,9 @@ import { TabBar, TopBar } from './components/Shell';
 import { HomePage } from './pages/Home';
 import { WelcomePage } from './pages/Welcome';
 import { useSync, watchForGames } from './state/sync';
+import { useReviewer } from './state/reviewer';
+import { useSettings } from './state/settings';
+import { keepScreenOn } from './lib/platform';
 
 // Screens other than the coach load when first opened, and in the background once the app is idle.
 const ReviewPage = lazy(() => import('./pages/Review').then((m) => ({ default: m.ReviewPage })));
@@ -44,6 +47,13 @@ export function App() {
     watchForGames();
     setTimeout(() => void pruneEvals(), 5000);
   }, []);
+
+  // The screen stays on while a review runs (if you want), so it doesn't stop when the phone sleeps.
+  const reviewing = useReviewer((s) => Object.values(s.jobs).some((j) => j.status === 'running'));
+  const keepAwake = useSettings((s) => s.keepAwake);
+  useEffect(() => {
+    keepScreenOn(reviewing && keepAwake);
+  }, [reviewing, keepAwake]);
 
   let page: ReactNode;
   const [root, id] = route.parts;

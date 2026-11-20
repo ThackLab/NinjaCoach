@@ -93,6 +93,12 @@ export function SettingsPage() {
           <Row title="Sound effects">
             <Toggle checked={s.sound} onChange={(sound) => s.set({ sound })} />
           </Row>
+          <Row
+            title="Keep the screen on while reviewing"
+            desc="So the review doesn't stop when the phone goes to sleep. It sleeps as usual once the reviews are done."
+          >
+            <Toggle checked={s.keepAwake} onChange={(keepAwake) => s.set({ keepAwake })} />
+          </Row>
           {canVibrate && (
             <Row title="Vibration" desc="A light tap for every move, a buzz for a mistake">
               <Toggle checked={s.haptics} onChange={(haptics) => s.set({ haptics })} />
@@ -102,7 +108,7 @@ export function SettingsPage() {
 
         <section className="card">
           <h2>Game review</h2>
-          <Row title="Review depth" desc="Deeper is more accurate but slower">
+          <Row title="Review depth" desc="For your 3 newest games. The rest are reviewed at Fast so all 20 get done sooner.">
             <Segmented
               value={s.reviewDepth}
               onChange={(reviewDepth) => s.set({ reviewDepth })}

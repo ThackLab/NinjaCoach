@@ -14,12 +14,47 @@ import { useReviewer } from '../state/reviewer';
 import { useRecentReviews, useSummaries } from '../state/summaries';
 import { useLibrary, useSync } from '../state/sync';
 import { usePracticeDue } from '../state/practice';
+import { useSettings } from '../state/settings';
 import { useMateDrill } from '../state/mates';
 import { ResultChip, when } from './Games';
 
 const SHOWN: Classification[] = ['brilliant', 'great', 'best', 'excellent', 'good', 'book', 'inaccuracy', 'mistake', 'miss', 'blunder'];
 const opp = (g: GameRecord) => (g.userColor === 'w' ? g.black : g.white);
 const mine = (g: GameRecord) => (g.userColor === 'w' ? g.white : g.black);
+
+/**
+ * Your last games as a row of squares, newest first: each one reviewed (with
+ * its result), the one being reviewed now, or still waiting. A tally of what
+ * the coach has checked, so you can see it never starts over.
+ */
+function GameTally({ games }: { games: GameRecord[] }) {
+  const jobs = useReviewer((s) => s.jobs);
+  return (
+    <div className="nc-tally-row" aria-label="Your last games, newest first">
+      {games.map((g) => {
+        const job = jobs[g.id];
+        const running = job?.status === 'running';
+        const o = g.result === '1/2-1/2' ? 'd' : (g.result === '1-0') === (g.userColor === 'w') ? 'w' : 'l';
+        const state = g.reviewedAt ? 'done' : running ? 'now' : 'todo';
+        const label = `${o === 'w' ? 'Won' : o === 'l' ? 'Lost' : 'Drew'} vs ${opp(g).name}: ${
+          state === 'done' ? 'reviewed' : state === 'now' ? 'being reviewed' : 'waiting'
+        }`;
+        return (
+          <button
+            key={g.id}
+            className={`nc-cell ${state} ${o}`}
+            title={label}
+            aria-label={label}
+            onClick={() => g.reviewedAt && navigate(`/review/${g.id}`)}
+            style={running ? ({ '--p': `${Math.round((100 * job.done) / Math.max(1, job.total))}%` } as React.CSSProperties) : undefined}
+          >
+            {state === 'done' ? o.toUpperCase() : ''}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 export function HomePage() {
   const sync = useSync();
@@ -28,6 +63,7 @@ export function HomePage() {
   const recent = useRecentReviews(12);
   const job = useReviewer((s) => Object.values(s.jobs).find((j) => j.status === 'running'));
   const due = usePracticeDue();
+  const keepAwake = useSettings((st) => st.keepAwake);
   const mates = useMateDrill();
 
   const total = games?.length ?? 0;
@@ -76,12 +112,12 @@ export function HomePage() {
               <b>
                 Reviewed {reviewed} of {total} games
               </b>
+              <GameTally games={games ?? []} />
               <span className="faint">
-                Newest first. {job ? `This one: ${Math.round((100 * job.done) / Math.max(1, job.total))}%.` : ''} Keep the app open and it carries on.
+                {job ? `This one: ${Math.round((100 * job.done) / Math.max(1, job.total))}%. ` : ''}One square per game, newest first: each fills in
+                with W, D or L once it's reviewed, and stays done. Nothing gets checked twice.{' '}
+                {keepAwake ? 'The screen stays on until it’s finished.' : 'Keep the app open and it carries on.'}
               </span>
-              <div className="progress">
-                <div style={{ width: `${(100 * reviewed) / Math.max(1, total)}%` }} />
-              </div>
             </>
           )}
         </section>
@@ -127,7 +163,11 @@ export function HomePage() {
       {last20.length > 0 && (
         <>
           <SectionTitle action={{ label: 'All games', href: '#/games' }}>
-            {last20.length === 1 ? 'Your last game' : `Your last ${last20.length} games`}
+            {last20.length < total
+              ? `Reviewed so far: ${last20.length} of ${total}`
+              : last20.length === 1
+                ? 'Your last game'
+                : `Your last ${last20.length} games`}
           </SectionTitle>
           <section className="card-box nc-tally">
             <div className="nt-head">
@@ -138,6 +178,7 @@ export function HomePage() {
                 {record.w}W {record.d}D {record.l}L
               </span>
             </div>
+            {reviewed >= total && <GameTally games={games ?? []} />}
             {SHOWN.filter((c) => tally.t[c]).map((c) => (
               <button
                 key={c}

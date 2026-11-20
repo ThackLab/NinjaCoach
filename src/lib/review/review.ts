@@ -32,7 +32,7 @@ export interface ReviewOptions {
   /** Evaluations already known (e.g. analysed in the background during the game), and where to keep new ones. */
   cache?: {
     get: (fen: string, minDepth: number, multipv: number) => Promise<PositionEval | null>;
-    put: (pos: PositionEval, multipv: number) => Promise<void>;
+    put: (pos: PositionEval, multipv: number, target?: number) => Promise<void>;
   };
 }
 
@@ -126,7 +126,8 @@ export async function analysePositions(game: GameInput, opts: ReviewOptions): Pr
       lines: res.lines.filter((l) => l.pv.length).map((l) => ({ score: l.score, pv: l.pv, san: sanLine(fen, l.pv, 12), depth: l.depth })),
       terminal: terminal[i],
     };
-    if (depth >= opts.depth) void opts.cache?.put(pos, multipv);
+    // Saved as soon as it's done, so a review that gets interrupted picks up where it stopped.
+    if (depth >= opts.depth && !opts.signal?.aborted) void opts.cache?.put(pos, multipv, opts.depth);
     return finalDraw(pos, i);
   };
 

@@ -11,7 +11,15 @@ interface Cached {
   pos: PositionEval;
   multipv: number;
   t: number;
+  /**
+   * The depth the search was asked for. On a slow phone the time limit often
+   * stops it short of that depth; it is still a finished search and isn't
+   * redone (or every interrupted review would start again from move 1).
+   */
+  target?: number;
 }
+
+const reached = (c: Cached) => Math.max(c.pos.depth, c.target ?? 0);
 
 /** Positions are keyed without move counters; the side to move, castling and en passant matter. */
 const keyOf = (fen: string) => fen.split(' ').slice(0, 4).join(' ');
@@ -27,17 +35,18 @@ export async function getEval(fen: string, minDepth: number, multipv: number): P
     }
     if (c) memory.set(key, c);
   }
-  if (!c || c.pos.depth < minDepth || c.multipv < multipv) return null;
+  if (!c || reached(c) < minDepth || c.multipv < multipv) return null;
   // The FEN's move counters belong to the game asking.
   return { ...c.pos, fen };
 }
 
-export async function putEval(pos: PositionEval, multipv: number): Promise<void> {
+/** Keeps a finished search; `target` is the depth it was asked for (it may have stopped short on time). */
+export async function putEval(pos: PositionEval, multipv: number, target = pos.depth): Promise<void> {
   if (pos.terminal === 'checkmate' || pos.terminal === 'stalemate' || !pos.lines.length) return;
   const key = keyOf(pos.fen);
   const old = memory.get(key);
-  if (old && (old.pos.depth > pos.depth || (old.pos.depth === pos.depth && old.multipv >= multipv))) return;
-  const c: Cached = { pos, multipv, t: Date.now() };
+  const c: Cached = { pos, multipv, t: Date.now(), target };
+  if (old && reached(old) >= reached(c) && old.multipv >= multipv && old.pos.depth >= pos.depth) return;
   memory.set(key, c);
   try {
     await set(key, c, store);

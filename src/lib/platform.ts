@@ -7,6 +7,8 @@ interface AndroidBridge {
   copyText(text: string): void;
   /** Vibrates in a pattern of on/off milliseconds, comma-separated (app version 1.1 and later). */
   vibrate?(pattern: string): void;
+  /** Keeps the screen on, or lets it sleep (app version 1.3 and later). */
+  keepScreenOn?(on: boolean): void;
 }
 
 const bridge = (globalThis as { NinjaCoachAndroid?: AndroidBridge }).NinjaCoachAndroid;
@@ -22,6 +24,27 @@ export function vibrate(pattern: number[]) {
     else navigator.vibrate?.(pattern);
   } catch {
     // Some browsers refuse without a recent tap; that's fine.
+  }
+}
+
+let lock: { release(): Promise<void> } | null = null;
+
+/** Keeps the screen from sleeping (the Android app, or a browser with the Wake Lock API), or lets it sleep again. */
+export function keepScreenOn(on: boolean) {
+  try {
+    if (typeof bridge?.keepScreenOn === 'function') return bridge.keepScreenOn(on);
+    const wl = (navigator as { wakeLock?: { request(type: 'screen'): Promise<{ release(): Promise<void> }> } }).wakeLock;
+    if (on && !lock && wl && document.visibilityState === 'visible')
+      void wl
+        .request('screen')
+        .then((l) => (lock = l))
+        .catch(() => undefined);
+    if (!on && lock) {
+      void lock.release().catch(() => undefined);
+      lock = null;
+    }
+  } catch {
+    // Not available here: the screen just sleeps as usual.
   }
 }
 

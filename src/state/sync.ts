@@ -11,6 +11,9 @@ import { useReviewer } from './reviewer';
 import { useSettings } from './settings';
 
 const RECHECK = 10 * 60_000;
+/** Your newest games get the review depth chosen in Settings; the rest a quicker one, so all 20 get done sooner. */
+const NEWEST = 3;
+const QUICK_DEPTH = 12;
 /** How many of your latest games the coach keeps and reviews. */
 export const KEEP = 20;
 
@@ -105,8 +108,14 @@ export async function reviewBacklog() {
         .sort((a, b) => b.createdAt - a.createdAt)[0];
       if (!next) break;
       tried.add(next.id);
+      const newest = (await listGames())
+        .filter((g) => g.userColor)
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .slice(0, NEWEST)
+        .some((g) => g.id === next.id);
+      const chosen = useSettings.getState().reviewDepth;
       try {
-        await useReviewer.getState().start(next.id, { depth: useSettings.getState().reviewDepth });
+        await useReviewer.getState().start(next.id, { depth: newest ? chosen : Math.min(chosen, QUICK_DEPTH) });
       } catch {
         break;
       }

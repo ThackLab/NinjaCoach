@@ -31,6 +31,8 @@ export interface Settings {
   sound: boolean;
   /** Vibrate on moves and results, where the device can (Android). */
   haptics: boolean;
+  /** Keep the screen on while the coach is reviewing, so it doesn't stop when the phone sleeps. */
+  keepAwake: boolean;
   coordinates: boolean;
   showLegalMoves: boolean;
   animation: boolean;
@@ -70,6 +72,7 @@ export const useSettings = create<Settings>()(
       backupSnoozedAt: 0,
       sound: true,
       haptics: true,
+      keepAwake: true,
       coordinates: true,
       showLegalMoves: true,
       animation: true,
