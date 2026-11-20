@@ -207,6 +207,18 @@ export function SettingsPage() {
         </section>
 
         <section className="card">
+          <h2>On another phone or computer</h2>
+          <p className="muted" style={{ fontSize: '0.88rem' }}>
+            Ninja Coach also runs in any browser, iPhones included, at{' '}
+            <a href="https://thacklab.github.io/NinjaCoach/" target="_blank" rel="noreferrer">
+              thacklab.github.io/NinjaCoach
+            </a>
+            . On an iPhone, open it in Safari, tap Share, then Add to Home Screen. Each phone keeps its own games; move yours across with Back up and
+            Restore above.
+          </p>
+        </section>
+
+        <section className="card">
           <h2>About</h2>
           <p className="muted" style={{ fontSize: '0.88rem' }}>
             Ninja Coach uses{' '}
