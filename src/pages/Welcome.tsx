@@ -1,6 +1,7 @@
 // First launch: the chess.com username, and what happens next.
 import { useState } from 'react';
 import { useSync } from '../state/sync';
+import { isIOS, isInstalled } from '../lib/platform';
 
 export function WelcomePage() {
   const [name, setName] = useState('');
@@ -11,6 +12,15 @@ export function WelcomePage() {
   };
   return (
     <div className="page narrow nc-welcome">
+      {isIOS && !isInstalled() && (
+        <div className="card-box nc-ios">
+          <b>On iPhone, add it to your home screen first</b>
+          <span>
+            Tap <b>Share</b> (the square with the arrow) at the bottom of Safari, then <b>Add to Home Screen</b>. Open Ninja Coach from the new icon:
+            it runs full screen, works offline, and iPhone keeps your games safe.
+          </span>
+        </div>
+      )}
       <img src="./icon-512.png" alt="" className="nc-hero-logo" width={120} height={120} />
       <h1>Ninja Coach</h1>
       <p className="nc-lead">

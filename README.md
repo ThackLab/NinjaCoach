@@ -30,6 +30,8 @@ Everything runs and stays on your device. The only thing it talks to is chess.co
 
 **Android:** download `ninjacoach.apk` from the [latest release](https://github.com/ThackLab/NinjaCoach/releases/latest) and open it. You may need to allow installs from your browser first.
 
+**iPhone (or any computer):** open **https://thacklab.github.io/NinjaCoach/** in Safari, tap **Share**, then **Add to Home Screen**. It's the same app: it runs full screen from its own icon and works offline once loaded.
+
 ## Build it yourself
 
 ```sh
