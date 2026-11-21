@@ -12,7 +12,8 @@ import type { GameRecord, GameSummary } from '../lib/storage/db';
 import { CLASS_META, type Classification } from '../lib/review/types';
 import { useReviewer } from '../state/reviewer';
 import { useRecentReviews, useSummaries } from '../state/summaries';
-import { useLibrary, useSync } from '../state/sync';
+import { useLibrary, useSync, WINDOWS, type GameWindow } from '../state/sync';
+import { Segmented } from '../components/Widgets';
 import { usePracticeDue } from '../state/practice';
 import { useSettings } from '../state/settings';
 import { useSensei } from '../state/sensei';
@@ -70,7 +71,8 @@ export function HomePage() {
 
   const total = games?.length ?? 0;
   const latest = games?.find((g) => g.reviewedAt && !sync.debriefed[g.id]);
-  const last20 = useMemo(() => (games ?? []).filter((g) => summaries?.has(g.id)).slice(0, 20), [games, summaries]);
+  // Every reviewed game the coach keeps: your last 20, 50, 100, 200 or all of them (the toggle below).
+  const last20 = useMemo(() => (games ?? []).filter((g) => summaries?.has(g.id)), [games, summaries]);
   const tally = useMemo(() => {
     const t: Partial<Record<Classification, number>> = {};
     let acc = 0;
@@ -186,12 +188,22 @@ export function HomePage() {
       {last20.length > 0 && (
         <>
           <SectionTitle action={{ label: 'All games', href: '#/games' }}>
-            {last20.length < Math.min(20, total)
-              ? `Reviewed so far: ${last20.length} of ${Math.min(20, total)}`
+            {last20.length < total
+              ? `Reviewed so far: ${last20.length} of ${total}`
               : last20.length === 1
                 ? 'Your last game'
-                : `Your last ${last20.length} games`}
+                : sync.keep
+                  ? `Your last ${last20.length} games`
+                  : `All ${last20.length} of your games`}
           </SectionTitle>
+          <div className="nc-window">
+            <span className="faint">Averages over</span>
+            <Segmented<GameWindow>
+              value={sync.keep}
+              onChange={sync.setKeep}
+              options={WINDOWS.map((n) => ({ value: n, label: n ? String(n) : 'All' }))}
+            />
+          </div>
           <section className="card-box nc-tally">
             <div className="nt-head">
               <span>

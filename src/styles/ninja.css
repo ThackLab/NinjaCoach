@@ -1033,3 +1033,11 @@ body .orientation-black coords.files coord:nth-child(odd) {
     font-size: 1.18rem;
   }
 }
+.nc-window {
+  display: grid;
+  gap: 4px;
+  margin: -4px 0 10px;
+}
+.nc-window .faint {
+  font-size: 0.78rem;
+}
