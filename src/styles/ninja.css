@@ -895,3 +895,141 @@ body .orientation-black coords.files coord:nth-child(odd) {
   margin-bottom: 4px;
   letter-spacing: 0.02em;
 }
+
+/* ---------------------------------------------------------------- Sensei */
+.nc-sensei {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  margin: 4px 0 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 16px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+}
+.nc-sensei > span:nth-child(2) {
+  display: grid;
+  gap: 2px;
+}
+.nc-sensei .faint {
+  font-size: 0.86rem;
+}
+.nc-sensei-face,
+.sensei-face {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #4b3a9a;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+.sensei-face {
+  width: 64px;
+  height: 64px;
+  font-size: 2.3rem;
+  flex: none;
+}
+.sensei-face.small {
+  width: 34px;
+  height: 34px;
+  font-size: 1.15rem;
+}
+.sensei-hero {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px;
+  margin-bottom: 18px;
+}
+.sensei-hero p {
+  margin: 6px 0 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.sensei-top {
+  display: flex;
+  align-items: center;
+}
+.sensei-top .player-bar {
+  flex: 1;
+}
+.sensei-thinking {
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+.sensei-say {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface-2);
+  border-left: 4px solid var(--line-strong);
+  font-size: 1.04rem;
+  line-height: 1.5;
+  color: var(--text-soft);
+}
+.sensei-say + .sensei-say {
+  margin-top: 8px;
+}
+.sensei-say.good {
+  border-left-color: #2f9e8a;
+}
+.sensei-say.ok {
+  border-left-color: #8a9e2f;
+}
+.sensei-say.warn {
+  border-left-color: #e8a33d;
+}
+.sensei-say.bad {
+  border-left-color: #e8553f;
+}
+.sensei-say.past {
+  display: block;
+  padding: 8px 12px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-faint);
+  max-height: calc(2 * 1.6em + 16px);
+  overflow: hidden;
+}
+.sensei-move {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--text-faint);
+  margin-bottom: 2px;
+}
+.sensei-wait {
+  margin: 8px 0 0;
+  font-size: 0.88rem;
+}
+.sensei-foot .btn {
+  gap: 6px;
+}
+@media (max-width: 900px) {
+  .focus-screen.sensei-screen .board-column {
+    --board: min(100vw, calc(100dvh - 2 * 46px - max(250px, 30dvh)));
+  }
+  .sensei-screen .player-bar {
+    min-height: 44px;
+    padding: 2px 12px;
+  }
+  .sensei-screen .panel-body {
+    padding: 10px 12px;
+  }
+  .sensei-screen .panel-foot {
+    padding: 8px 12px max(8px, env(safe-area-inset-bottom));
+  }
+}
+@media (min-width: 600px) and (max-width: 900px) {
+  .sensei-say {
+    font-size: 1.18rem;
+  }
+}

@@ -91,7 +91,7 @@ export const useSync = create<SyncState>()(
           }
           // Older games drop off, with their reviews.
           const ids = new Set(keep.map((r) => r.id));
-          for (const g of await listGames()) if (!ids.has(g.id)) await deleteGame(g.id);
+          for (const g of await listGames()) if (g.source === 'import' && !ids.has(g.id)) await deleteGame(g.id);
           set({ syncing: false, fetched: null, lastSync: Date.now(), lastNew: added });
         } catch (e) {
           set({ syncing: false, fetched: null, lastSync: Date.now(), lastError: e instanceof Error ? e.message : String(e) });
@@ -158,7 +158,9 @@ export function watchForGames() {
 export function useLibrary(): { games: GameRecord[] | null; reviewed: number } {
   const [games, setGames] = useState<GameRecord[] | null>(null);
   useEffect(() => {
-    const load = () => void listGames().then((all) => setGames(all.filter((g) => g.userColor).sort((a, b) => b.createdAt - a.createdAt)));
+    // Your chess.com games (games against Sensei are kept apart).
+    const load = () =>
+      void listGames().then((all) => setGames(all.filter((g) => g.userColor && g.source !== 'bot').sort((a, b) => b.createdAt - a.createdAt)));
     load();
     return onDbChange(load);
   }, []);

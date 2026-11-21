@@ -28,7 +28,7 @@ export function useRecentReviews(n: number): ReviewedGame[] | null {
   useEffect(() => {
     const load = async () => {
       const games = (await listGames())
-        .filter((g) => g.userColor && g.reviewedAt)
+        .filter((g) => g.userColor && g.reviewedAt && g.source !== 'bot')
         .sort((a, b) => b.createdAt - a.createdAt)
         .slice(0, n);
       const out: ReviewedGame[] = [];

@@ -15,7 +15,7 @@ export function useStatGames(): StatGame[] | null {
     let alive = true;
     const load = async () => {
       const games = (await listGames())
-        .filter((g) => g.userColor)
+        .filter((g) => g.userColor && g.source !== 'bot')
         .sort((a, b) => b.createdAt - a.createdAt)
         .slice(0, keep || undefined);
       const out: StatGame[] = [];

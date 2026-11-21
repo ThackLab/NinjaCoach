@@ -15,6 +15,7 @@ import { useRecentReviews, useSummaries } from '../state/summaries';
 import { useLibrary, useSync } from '../state/sync';
 import { usePracticeDue } from '../state/practice';
 import { useSettings } from '../state/settings';
+import { useSensei } from '../state/sensei';
 import { useMateDrill } from '../state/mates';
 import { ResultChip, when } from './Games';
 
@@ -64,6 +65,7 @@ export function HomePage() {
   const job = useReviewer((s) => Object.values(s.jobs).find((j) => j.status === 'running'));
   const due = usePracticeDue();
   const keepAwake = useSettings((st) => st.keepAwake);
+  const senseiGame = useSensei((st) => st.game);
   const mates = useMateDrill();
 
   const total = games?.length ?? 0;
@@ -169,6 +171,17 @@ export function HomePage() {
           </section>
         )
       )}
+
+      <button className="nc-sensei" onClick={() => navigate('/sensei')}>
+        <span className="nc-sensei-face" aria-hidden>
+          🥷
+        </span>
+        <span>
+          <b>{senseiGame && !senseiGame.result ? 'Carry on your game with Sensei' : 'Play a game with Sensei'}</b>
+          <span className="faint">He plays just above your level and coaches you on every move.</span>
+        </span>
+        <ChevronRight size={18} />
+      </button>
 
       {last20.length > 0 && (
         <>
