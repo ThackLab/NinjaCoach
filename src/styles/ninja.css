@@ -812,3 +812,86 @@ cg-board square.nc-covered {
   font-size: 0.92rem;
   line-height: 1.5;
 }
+
+/* ---------------------------------------------------------------- board coordinates
+   Inside the edge squares, over the pieces, readable on any square. "body" so these
+   win over chessground's own stylesheet, which loads after this one. */
+body .cg-wrap coords {
+  z-index: 3;
+  opacity: 1;
+  font-family: inherit;
+  font-size: clamp(10px, 2.6vmin, 15px);
+  font-weight: 700;
+  pointer-events: none;
+}
+body .cg-wrap coords.ranks {
+  left: 3px;
+  top: 2px;
+  width: 14px;
+  height: 100%;
+}
+body .cg-wrap coords.ranks coord {
+  flex: 1 1 0;
+  transform: none;
+}
+body .cg-wrap coords.files {
+  left: 0;
+  right: 0;
+  bottom: 1px;
+  width: 100%;
+  height: auto;
+  text-align: right;
+  text-transform: lowercase;
+}
+body .cg-wrap coords.files coord {
+  flex: 1 1 0;
+  padding-right: 4px;
+}
+body .cg-wrap coords coord {
+  --coord-on-dark: #fff;
+  --coord-on-light: #2b2b2b;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.4);
+}
+body .orientation-white coords.ranks coord:nth-child(odd),
+body .orientation-white coords.files coord:nth-child(odd),
+body .orientation-black coords.ranks coord:nth-child(even),
+body .orientation-black coords.files coord:nth-child(even) {
+  color: var(--coord-on-dark);
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.7);
+}
+body .orientation-white coords.ranks coord:nth-child(even),
+body .orientation-white coords.files coord:nth-child(even),
+body .orientation-black coords.ranks coord:nth-child(odd),
+body .orientation-black coords.files coord:nth-child(odd) {
+  color: var(--coord-on-light);
+}
+
+/* ---------------------------------------------------------------- practice and the mate drill fit on one screen */
+@media (max-width: 900px) {
+  .focus-screen.practice-screen .board-column,
+  .focus-screen.mate-screen .board-column {
+    --board: min(100vw, calc(100dvh - 44px - max(300px, 34dvh)));
+  }
+  .practice-screen .panel-body,
+  .mate-screen .panel-body {
+    padding: 10px 12px;
+  }
+  .practice-screen .panel-foot,
+  .mate-screen .panel-foot {
+    padding: 8px 12px max(8px, env(safe-area-inset-bottom));
+  }
+  .practice-screen .coach-card,
+  .mate-screen .coach-card {
+    padding: 12px 14px;
+  }
+  .practice-screen .coach-title,
+  .mate-screen .coach-title {
+    font-size: 1.2rem;
+  }
+}
+.st-filter-k {
+  font-size: 0.74rem;
+  color: var(--text-faint);
+  margin-bottom: 4px;
+  letter-spacing: 0.02em;
+}

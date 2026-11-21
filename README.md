@@ -2,7 +2,7 @@
 
 A chess coach for your chess.com games. Give it your chess.com username and it does the rest:
 
-- **It keeps your last 20 games**, checks for new ones each time you open the app, and lets older ones drop off.
+- **It keeps your last 20 games** (or 50, 100, 200 or all of them: choose on the Stats screen), checks for new ones each time you open the app, and lets older ones drop off.
 - **It reviews each one with Stockfish 18** on your phone, in the background, newest first. A row of 20 squares on the coach screen fills in with W, D or L as each game is done. Every position is saved as it's checked, so if the app is closed halfway the review picks up where it stopped, and the screen stays on while it works (you can turn that off).
 - **Each move gets a classification:** Brilliant, Great, Best, Excellent, Good, Book, Inaccuracy, Mistake, Miss or Blunder (chess.com's expected-points thresholds). Each player also gets an accuracy score (the lichess formula) and a game rating estimate.
 - **It debriefs your latest game** like a coach would: how it ended, your best moment and where the game turned. Then each key moment becomes a hands-on workshop:
@@ -11,7 +11,7 @@ A chess coach for your chess.com games. Give it your chess.com username and it d
   - **Tinker:** try any move; the engine answers and tells you what it does.
 - **Moments:** every brilliant move, great move, blunder, mistake and missed win across all your games, in one list. Tap one to go straight to that position with **Show me**.
 - **Mate drill:** every forced mate you missed (up to mate in 5), or got to the long way round, becomes a puzzle. You get a few a day. Try it first, with hints if you want them; the engine plays their best defence. Then the coach walks you through how you could have seen it: count the king's squares, try every check, follow each forcing move and its reply, and see why the final position is mate. Miss one and it comes back tomorrow until you get it.
-- **Stats** for your last 20 games, the kind chess.com keeps behind its paywall:
+- **Stats** for your last 20 games (or 50, 100, 200 or all time), the kind chess.com keeps behind its paywall:
   - **results:** score, win rate and W/D/L by colour, time control, opponent strength (higher, similar, lower rated), time of day, day of the week and game length; your best win and toughest loss; streaks;
   - **how games end:** wins, losses and draws by checkmate, resignation, time, repetition and so on;
   - **rating:** your chess.com rating for each time control, with change, peak and low;

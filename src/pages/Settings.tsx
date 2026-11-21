@@ -52,7 +52,10 @@ export function SettingsPage() {
       <div className="settings-grid">
         <section className="card">
           <h2>chess.com</h2>
-          <Row title="Your username" desc="Your coach keeps this player's last 20 games on chess.com.">
+          <Row
+            title="Your username"
+            desc={`Your coach keeps this player's ${sync.keep ? `last ${sync.keep}` : 'every'} games on chess.com. Change how many on the Stats screen.`}
+          >
             <form
               className="row"
               onSubmit={(e) => {

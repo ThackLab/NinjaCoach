@@ -12,6 +12,7 @@ import { navigate } from '../lib/router';
 import { CLASS_META } from '../lib/review/types';
 import { computeStats, timeClassOf, type Bucket, type Stats, type WDL } from '../lib/stats';
 import { useStatGames } from '../state/statGames';
+import { useSync, WINDOWS, type GameWindow } from '../state/sync';
 
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 const one = (x: number | null | undefined) => (x === null || x === undefined ? '–' : x.toFixed(1));
@@ -167,6 +168,9 @@ const open = (id: string) => () => navigate(`/review/${id}`);
 
 export function StatsPage() {
   const all = useStatGames();
+  const keep = useSync((st) => st.keep);
+  const setKeep = useSync((st) => st.setKeep);
+  const syncing = useSync((st) => st.syncing);
   const [tc, setTc] = useState('all');
   const classes = useMemo(() => [...new Set((all ?? []).map((x) => timeClassOf(x.game)))], [all]);
   const list = useMemo(() => (all ?? []).filter((x) => tc === 'all' || timeClassOf(x.game) === tc), [all, tc]);
@@ -191,11 +195,27 @@ export function StatsPage() {
     <div className="page narrow stats">
       <PageHead
         title="Stats"
-        sub={`Your last ${s.games} game${s.games === 1 ? '' : 's'}${s.reviewed < s.games ? ` · ${s.reviewed} reviewed so far` : ''}`}
+        sub={`${keep ? `Your last ${s.games}` : `All ${s.games} of your`} game${s.games === 1 ? '' : 's'}${s.reviewed < s.games ? ` · ${s.reviewed} reviewed so far` : ''}`}
       />
+      <div className="st-filter">
+        <div className="st-filter-k">Games</div>
+        <Segmented<GameWindow> value={keep} onChange={setKeep} options={WINDOWS.map((n) => ({ value: n, label: n ? String(n) : 'All time' }))} />
+        {(syncing || s.reviewed < s.games) && (
+          <p className="faint st-note">
+            {syncing
+              ? 'Fetching your games from chess.com…'
+              : `Results, endings, openings, rating and time cover all ${s.games} games now. Accuracy and move stats cover the ${s.reviewed} reviewed so far, and fill in as the rest are reviewed (newest first, while the app is open).`}
+          </p>
+        )}
+      </div>
       {classes.length > 1 && (
         <div className="st-filter">
-          <Segmented value={tc} onChange={setTc} options={[{ value: 'all', label: 'All' }, ...classes.map((c) => ({ value: c, label: label(c) }))]} />
+          <div className="st-filter-k">Time control</div>
+          <Segmented
+            value={tc}
+            onChange={setTc}
+            options={[{ value: 'all', label: 'All types' }, ...classes.map((c) => ({ value: c, label: label(c) }))]}
+          />
         </div>
       )}
 

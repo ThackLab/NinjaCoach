@@ -99,11 +99,21 @@ export function HomePage() {
         <section className="card-box nc-status">
           {sync.syncing ? (
             <>
-              <b>Fetching your last 20 games from chess.com…</b>
-              <span className="faint">{sync.fetched?.done ? `${sync.fetched.done} of ${sync.fetched.total} found` : 'Looking up your account'}</span>
+              <b>{sync.keep ? `Fetching your last ${sync.keep} games from chess.com…` : 'Fetching all your games from chess.com…'}</b>
+              <span className="faint">
+                {sync.fetched
+                  ? sync.keep
+                    ? `${Math.min(sync.fetched.games, sync.keep)} of ${sync.keep} found`
+                    : `Month ${sync.fetched.done} of ${sync.fetched.total} · ${sync.fetched.games} games`
+                  : 'Looking up your account'}
+              </span>
               {sync.fetched && (
                 <div className="progress">
-                  <div style={{ width: `${(100 * sync.fetched.done) / Math.max(1, sync.fetched.total)}%` }} />
+                  <div
+                    style={{
+                      width: `${100 * (sync.keep ? Math.min(1, sync.fetched.games / sync.keep) : sync.fetched.done / Math.max(1, sync.fetched.total))}%`,
+                    }}
+                  />
                 </div>
               )}
             </>
@@ -112,7 +122,7 @@ export function HomePage() {
               <b>
                 Reviewed {reviewed} of {total} games
               </b>
-              <GameTally games={games ?? []} />
+              <GameTally games={(games ?? []).slice(0, 20)} />
               <span className="faint">
                 {job ? `This one: ${Math.round((100 * job.done) / Math.max(1, job.total))}%. ` : ''}One square per game, newest first: each fills in
                 with W, D or L once it's reviewed, and stays done. Nothing gets checked twice.{' '}
@@ -163,8 +173,8 @@ export function HomePage() {
       {last20.length > 0 && (
         <>
           <SectionTitle action={{ label: 'All games', href: '#/games' }}>
-            {last20.length < total
-              ? `Reviewed so far: ${last20.length} of ${total}`
+            {last20.length < Math.min(20, total)
+              ? `Reviewed so far: ${last20.length} of ${Math.min(20, total)}`
               : last20.length === 1
                 ? 'Your last game'
                 : `Your last ${last20.length} games`}
@@ -178,7 +188,7 @@ export function HomePage() {
                 {record.w}W {record.d}D {record.l}L
               </span>
             </div>
-            {reviewed >= total && <GameTally games={games ?? []} />}
+            {(games ?? []).slice(0, 20).every((g) => g.reviewedAt) && <GameTally games={(games ?? []).slice(0, 20)} />}
             {SHOWN.filter((c) => tally.t[c]).map((c) => (
               <button
                 key={c}

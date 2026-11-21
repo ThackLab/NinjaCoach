@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { ChevronLeft } from 'lucide-react';
 import { Chess } from 'chess.js';
 import type { DrawShape } from 'chessground/draw';
 import type { Key } from 'chessground/types';
@@ -204,9 +205,9 @@ export function PracticePage() {
         <div className="card empty">
           {total === 0 ? (
             <>
-              <p>No practice positions yet. Play and review a few games – your mistakes will show up here.</p>
+              <p>No practice positions yet. As your games are reviewed, your mistakes show up here.</p>
               <button className="btn primary" onClick={() => navigate('/')}>
-                Play a bot
+                Back to your coach
               </button>
             </>
           ) : (
@@ -225,6 +226,9 @@ export function PracticePage() {
           <b>Find the best move for {side}</b>
         </div>
         <div className="player-bar only-mobile" style={{ minHeight: 30 }}>
+          <button className="icon-btn" onClick={() => navigate('/')} aria-label="Back to your coach">
+            <ChevronLeft size={20} />
+          </button>
           <b>Practice</b>
           <span className="spacer" />
           <span className="faint">

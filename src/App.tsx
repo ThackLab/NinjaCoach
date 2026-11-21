@@ -31,7 +31,7 @@ const LATER = [
 ];
 
 /** Board screens take the whole phone screen (no bars). */
-const isFocus = (root?: string) => root === 'review' || root === 'analysis' || root === 'mates';
+const isFocus = (root?: string) => root === 'review' || root === 'analysis' || root === 'mates' || root === 'practice';
 
 export function App() {
   const route = useRoute();

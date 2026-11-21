@@ -1,7 +1,8 @@
-// Ninja Coach's link to chess.com: it keeps your newest 20 games (fetching
-// back through the monthly archives until it has them), reviews them in the
-// background, newest first, and lets older ones drop off as new ones come in.
-// It checks again whenever the app opens or comes back to the front.
+// Ninja Coach's link to chess.com: it keeps your newest games (20 unless you
+// choose 50, 100, 200 or all of them on the Stats screen), fetching back
+// through the monthly archives until it has them, reviews them in the
+// background, newest first, and lets older ones drop off as new ones come
+// in. It checks again whenever the app opens or comes back to the front.
 import { useEffect, useState } from 'react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -11,24 +12,29 @@ import { useReviewer } from './reviewer';
 import { useSettings } from './settings';
 
 const RECHECK = 10 * 60_000;
-/** Your newest games get the review depth chosen in Settings; the rest a quicker one, so all 20 get done sooner. */
+/** Your newest games get the review depth chosen in Settings; the rest a quicker one, so they all get done sooner. */
 const NEWEST = 3;
 const QUICK_DEPTH = 12;
-/** How many of your latest games the coach keeps and reviews. */
-export const KEEP = 20;
+/** How many of your latest games the coach can keep and review; 0 is all of them. */
+export const WINDOWS = [20, 50, 100, 200, 0] as const;
+export type GameWindow = (typeof WINDOWS)[number];
+let resync = false;
 
 interface SyncState {
   username: string;
   lastSync: number;
   lastError: string;
   syncing: boolean;
-  /** While fetching: months done of months to fetch. */
-  fetched: { done: number; total: number } | null;
+  /** How many of your latest games to keep and review (0 = all). */
+  keep: GameWindow;
+  /** While fetching: months looked through of all your months, and the games found so far. */
+  fetched: { done: number; total: number; games: number } | null;
   /** How many games the last sync brought in. */
   lastNew: number;
   /** Games you have gone over with the coach, and when. */
   debriefed: Record<string, number>;
   setUsername: (name: string) => void;
+  setKeep: (n: GameWindow) => void;
   markDebriefed: (id: string) => void;
   sync: (force?: boolean) => Promise<void>;
 }
@@ -40,30 +46,39 @@ export const useSync = create<SyncState>()(
       lastSync: 0,
       lastError: '',
       syncing: false,
+      keep: 20,
       fetched: null,
       lastNew: 0,
       debriefed: {},
       setUsername: (name) => set({ username: name.trim(), lastSync: 0, lastError: '' }),
+      setKeep: (keep) => {
+        if (keep === get().keep) return;
+        set({ keep, lastSync: 0 });
+        if (get().syncing) resync = true;
+        else void get().sync(true);
+      },
       markDebriefed: (id) => set((s) => ({ debriefed: { ...s.debriefed, [id]: Date.now() } })),
       sync: async (force = false) => {
         const s = get();
         if (!s.username || s.syncing) return;
         if (!force && Date.now() - s.lastSync < RECHECK) return void reviewBacklog();
-        set({ syncing: true, lastError: '', fetched: { done: 0, total: KEEP } });
+        const limit = s.keep || Infinity;
+        set({ syncing: true, lastError: '', fetched: null });
         let added = 0;
         try {
-          // Newest month first, back until there are 20 games.
+          // Newest month first, back until there are enough games.
           const archives = [...(await chessComArchives(s.username))].reverse();
           const found: GameRecord[] = [];
-          for (const url of archives) {
+          set({ fetched: { done: 0, total: archives.length, games: 0 } });
+          for (const [i, url] of archives.entries()) {
             for (const c of await chessComArchiveGames(url)) {
               const rec = toRecord(c, s.username);
               if (rec?.userColor) found.push(rec);
             }
-            set({ fetched: { done: Math.min(found.length, KEEP), total: KEEP } });
-            if (found.length >= KEEP) break;
+            set({ fetched: { done: i + 1, total: archives.length, games: found.length } });
+            if (found.length >= limit) break;
           }
-          const keep = found.sort((a, b) => b.createdAt - a.createdAt).slice(0, KEEP);
+          const keep = found.sort((a, b) => b.createdAt - a.createdAt).slice(0, limit);
           for (const rec of keep) {
             const have = await getGame(rec.id);
             if (!have) {
@@ -81,6 +96,11 @@ export const useSync = create<SyncState>()(
         } catch (e) {
           set({ syncing: false, fetched: null, lastSync: Date.now(), lastError: e instanceof Error ? e.message : String(e) });
         }
+        // The number of games was changed while this was fetching: fetch again for the new number.
+        if (resync) {
+          resync = false;
+          return void get().sync(true);
+        }
         void reviewBacklog();
       },
     }),
@@ -89,7 +109,7 @@ export const useSync = create<SyncState>()(
       // Version 2 keeps only the last 20 games: check again straight away after the update.
       version: 2,
       migrate: (old) => ({ ...(old as object), lastSync: 0 }) as SyncState,
-      partialize: (s) => ({ username: s.username, lastSync: s.lastSync, lastNew: s.lastNew, debriefed: s.debriefed }),
+      partialize: (s) => ({ username: s.username, keep: s.keep, lastSync: s.lastSync, lastNew: s.lastNew, debriefed: s.debriefed }),
     },
   ),
 );
