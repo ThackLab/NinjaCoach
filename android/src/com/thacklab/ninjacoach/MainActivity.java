@@ -13,6 +13,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.PowerManager;
+import android.provider.Settings;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.MediaStore;
@@ -47,6 +49,7 @@ public class MainActivity extends Activity {
     private static final int FILE_REQUEST = 1;
 
     private WebView web;
+    private boolean working;
     private ValueCallback<Uri[]> pendingFiles;
 
     @Override
@@ -65,6 +68,8 @@ public class MainActivity extends Activity {
         web.setWebViewClient(new AssetClient());
         web.setWebChromeClient(new FileChooserClient());
         web.addJavascriptInterface(new Bridge(), "NinjaCoachAndroid");
+        // Keep the page's process at full priority when the screen is off, so reviews carry on.
+        if (Build.VERSION.SDK_INT >= 26) web.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, false);
         setContentView(web);
         if (state == null || web.restoreState(state) == null) web.loadUrl(START_URL);
     }
@@ -234,6 +239,61 @@ public class MainActivity extends Activity {
             } catch (Exception e) {
                 return "";
             }
+        }
+
+        /** Starts or stops the background service that keeps reviews going with the screen off, or updates its text. */
+        @JavascriptInterface
+        public void backgroundWork(final boolean on, final String text) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Intent i = new Intent(MainActivity.this, ReviewService.class);
+                    try {
+                        if (!on) {
+                            stopService(i);
+                            working = false;
+                        } else if (working) {
+                            ReviewService.update(MainActivity.this, text);
+                        } else {
+                            if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED)
+                                requestPermissions(new String[] { "android.permission.POST_NOTIFICATIONS" }, 2);
+                            i.putExtra("text", text);
+                            if (Build.VERSION.SDK_INT >= 26) startForegroundService(i);
+                            else startService(i);
+                            working = true;
+                        }
+                    } catch (Exception e) {
+                        // Android won't start it from the background; the next start from the app will.
+                    }
+                }
+            });
+        }
+
+        /** Whether Android leaves this app out of battery optimisation (needed to keep working in deep sleep). */
+        @JavascriptInterface
+        public boolean batteryExempt() {
+            if (Build.VERSION.SDK_INT < 23) return true;
+            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+            return pm != null && pm.isIgnoringBatteryOptimizations(getPackageName());
+        }
+
+        /** Asks to be left out of battery optimisation (Android shows its own yes/no). */
+        @JavascriptInterface
+        public void askBatteryExempt() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        startActivity(new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + getPackageName())));
+                    } catch (Exception e) {
+                        try {
+                            startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
+                        } catch (Exception ignored) {
+                            // No such screen on this phone.
+                        }
+                    }
+                }
+            });
         }
 
         /** Vibrates in a pattern of on/off milliseconds, e.g. "14,60,14". */

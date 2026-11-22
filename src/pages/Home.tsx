@@ -1,7 +1,8 @@
 // `#/`: the coach. What it is doing (fetching, reviewing), the game to go over
 // next, how your last games went move by move, the habit to work on, and your
 // chess.com rating.
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { askBatteryExempt, canWorkLocked, isBatteryExempt } from '../lib/platform';
 import { ChevronRight } from 'lucide-react';
 import { ClassIcon } from '../components/ClassIcon';
 import { HabitCard } from '../components/HabitCard';
@@ -66,6 +67,8 @@ export function HomePage() {
   const job = useReviewer((s) => Object.values(s.jobs).find((j) => j.status === 'running'));
   const due = usePracticeDue();
   const keepAwake = useSettings((st) => st.keepAwake);
+  const locked = useSettings((st) => st.lockedReviews) && canWorkLocked;
+  const [exempt, setExempt] = useState(isBatteryExempt);
   const senseiGame = useSensei((st) => st.game);
   const mates = useMateDrill();
 
@@ -130,8 +133,23 @@ export function HomePage() {
               <span className="faint">
                 {job ? `This one: ${Math.round((100 * job.done) / Math.max(1, job.total))}%. ` : ''}One square per game, newest first: each fills in
                 with W, D or L once it's reviewed, and stays done. Nothing gets checked twice.{' '}
-                {keepAwake ? 'The screen stays on until it’s finished.' : 'Keep the app open and it carries on.'}
+                {locked
+                  ? 'You can lock the phone: it keeps going, with a notification showing how far along it is.'
+                  : keepAwake
+                    ? 'The screen stays on until it’s finished.'
+                    : 'Keep the app open and it carries on.'}
               </span>
+              {locked && !exempt && (
+                <button
+                  className="btn small"
+                  onClick={() => {
+                    askBatteryExempt();
+                    setTimeout(() => setExempt(isBatteryExempt()), 4000);
+                  }}
+                >
+                  Let it keep going when the phone is locked
+                </button>
+              )}
             </>
           )}
         </section>

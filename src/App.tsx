@@ -5,10 +5,10 @@ import { pruneEvals } from './lib/review/evalCache';
 import { TabBar, TopBar } from './components/Shell';
 import { HomePage } from './pages/Home';
 import { WelcomePage } from './pages/Welcome';
-import { useSync, watchForGames } from './state/sync';
+import { useBacklog, useSync, watchForGames } from './state/sync';
 import { useReviewer } from './state/reviewer';
 import { useSettings } from './state/settings';
-import { keepScreenOn } from './lib/platform';
+import { keepScreenOn, setBackgroundWork } from './lib/platform';
 import { watchMasterSheet } from './lib/sheetWatch';
 
 // Screens other than the coach load when first opened, and in the background once the app is idle.
@@ -61,6 +61,23 @@ export function App() {
   useEffect(() => {
     keepScreenOn(reviewing && keepAwake);
   }, [reviewing, keepAwake]);
+  // With the screen off, a background service (Android) keeps the reviews going, its notification
+  // showing how far along it is. It stays on between games, and stops a little after the last one.
+  const backlog = useBacklog((s) => s.active);
+  const lockedReviews = useSettings((s) => s.lockedReviews);
+  const progress = useReviewer((s) => {
+    const j = Object.values(s.jobs).find((x) => x.status === 'running');
+    return j ? Math.floor((10 * j.done) / Math.max(1, j.total)) * 10 : null;
+  });
+  const busy = (backlog || reviewing) && lockedReviews;
+  useEffect(() => {
+    if (busy) {
+      setBackgroundWork(true, progress !== null ? `Reviewing a game: ${progress}% done` : 'Working through your games');
+      return;
+    }
+    const t = setTimeout(() => setBackgroundWork(false), 4000);
+    return () => clearTimeout(t);
+  }, [busy, progress]);
 
   let page: ReactNode;
   const [root, id] = route.parts;

@@ -1108,3 +1108,32 @@ body .orientation-black coords.files coord:nth-child(odd) {
   font-size: 0.72rem;
   color: var(--text-faint);
 }
+
+/* ---------------------------------------------------------------- quick review / deep analysis */
+.rv-depth {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+.rv-depth .faint {
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+.rv-badge {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--text-dim);
+}
+.rv-badge.deep {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+  color: var(--text);
+}

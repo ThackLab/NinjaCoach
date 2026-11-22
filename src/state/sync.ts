@@ -9,12 +9,8 @@ import { persist } from 'zustand/middleware';
 import { chessComArchiveGames, chessComArchives, toRecord } from '../lib/importGames';
 import { deleteGame, getGame, listGames, onDbChange, saveGame, type GameRecord } from '../lib/storage/db';
 import { useReviewer } from './reviewer';
-import { useSettings } from './settings';
 
 const RECHECK = 10 * 60_000;
-/** Your newest games get the review depth chosen in Settings; the rest a quicker one, so they all get done sooner. */
-const NEWEST = 3;
-const QUICK_DEPTH = 12;
 /** How many of your latest games the coach can keep and review; 0 is all of them. */
 export const WINDOWS = [20, 50, 100, 200, 0] as const;
 export type GameWindow = (typeof WINDOWS)[number];
@@ -116,11 +112,14 @@ export const useSync = create<SyncState>()(
 );
 
 let reviewing = false;
+/** Whether the review queue is working through games (it is between games too). */
+export const useBacklog = create<{ active: boolean }>(() => ({ active: false }));
 
 /** Reviews each of your games that has no review yet, newest first, one at a time. */
 export async function reviewBacklog() {
   if (reviewing) return;
   reviewing = true;
+  useBacklog.setState({ active: true });
   try {
     const tried = new Set<string>();
     for (;;) {
@@ -129,14 +128,9 @@ export async function reviewBacklog() {
         .sort((a, b) => b.createdAt - a.createdAt)[0];
       if (!next) break;
       tried.add(next.id);
-      const newest = (await listGames())
-        .filter((g) => g.userColor)
-        .sort((a, b) => b.createdAt - a.createdAt)
-        .slice(0, NEWEST)
-        .some((g) => g.id === next.id);
-      const chosen = useSettings.getState().reviewDepth;
       try {
-        await useReviewer.getState().start(next.id, { depth: newest ? chosen : Math.min(chosen, QUICK_DEPTH) });
+        // A quick review; a deep one only when you ask for it on the game.
+        await useReviewer.getState().start(next.id);
       } catch {
         break;
       }
@@ -145,6 +139,7 @@ export async function reviewBacklog() {
     }
   } finally {
     reviewing = false;
+    useBacklog.setState({ active: false });
   }
 }
 

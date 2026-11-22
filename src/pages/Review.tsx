@@ -1119,6 +1119,23 @@ export function ReviewPage({
 
           {review && !guided && !intro && (tab === 'summary' || (tab === 'coach' && cur === -1)) && (
             <>
+              {tab === 'summary' && (
+                <div className="rv-depth">
+                  <span className={`rv-badge ${review.mode === 'deep' || review.depth >= 20 ? 'deep' : ''}`}>
+                    {review.mode === 'deep' || review.depth >= 20 ? 'Deep analysis' : 'Quick review'}
+                  </span>
+                  <span className="faint">
+                    {review.mode === 'deep' || review.depth >= 20
+                      ? `Every move checked deeply (depth ${review.depth}).`
+                      : 'Every move checked quickly, and the key moments (brilliant, great, mistakes, blunders) checked again more deeply.'}
+                  </span>
+                  {review.mode !== 'deep' && review.depth < 20 && !running && (
+                    <button className="btn small primary" onClick={() => void useReviewer.getState().start(gameId, { mode: 'deep', force: true })}>
+                      Run a deep analysis
+                    </button>
+                  )}
+                </div>
+              )}
               {!game.userColor && (
                 <div className="row card" style={{ marginBottom: 12, padding: 10, background: 'var(--panel-2)' }}>
                   <span className="muted" style={{ fontSize: '0.88rem' }}>
@@ -1239,11 +1256,11 @@ export function ReviewPage({
                 </span>
                 <span className="ctl-label">Analyse</span>
               </button>
-              {review && !running && review.depth < 20 && (
+              {review && !running && review.mode !== 'deep' && review.depth < 20 && (
                 <button
                   className="ctl only-desktop"
-                  onClick={() => void useReviewer.getState().start(gameId, { depth: 20, force: true })}
-                  title="Run a deeper review"
+                  onClick={() => void useReviewer.getState().start(gameId, { mode: 'deep', force: true })}
+                  title="Run a deep analysis of the whole game"
                 >
                   <span className="ctl-ico">
                     <Gauge size={20} />

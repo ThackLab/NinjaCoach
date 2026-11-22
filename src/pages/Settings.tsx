@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Segmented, Toggle, toast } from '../components/Widgets';
 import { canUseThreads, hardwareThreads } from '../lib/engine/manager';
 import { importAll, wipeAll, type Backup } from '../lib/storage/db';
@@ -6,7 +6,7 @@ import { backupNow } from '../lib/backup';
 import { useSettings } from '../state/settings';
 import { PageHead } from '../components/ui';
 import { useSync } from '../state/sync';
-import { canKeepFiles, canVibrate } from '../lib/platform';
+import { askBatteryExempt, canKeepFiles, canVibrate, canWorkLocked, isBatteryExempt } from '../lib/platform';
 import { navigate } from '../lib/router';
 
 function Row({ title, desc, children }: { title: string; desc?: string; children: React.ReactNode }) {
@@ -26,6 +26,12 @@ export function SettingsPage() {
   const sync = useSync();
   const [name, setName] = useState(sync.username);
   const threads = canUseThreads();
+  const [exempt, setExempt] = useState(isBatteryExempt);
+  useEffect(() => {
+    const look = () => document.visibilityState === 'visible' && setExempt(isBatteryExempt());
+    document.addEventListener('visibilitychange', look);
+    return () => document.removeEventListener('visibilitychange', look);
+  }, []);
 
   const download = async () => {
     try {
@@ -97,6 +103,38 @@ export function SettingsPage() {
           <Row title="Sound effects">
             <Toggle checked={s.sound} onChange={(sound) => s.set({ sound })} />
           </Row>
+          {canWorkLocked && (
+            <Row
+              title="Keep reviewing with the phone locked"
+              desc="Reviews carry on with the screen off, with a notification while they run. Turn it off to save battery: reviews then pause until you open the app."
+            >
+              <Toggle checked={s.lockedReviews} onChange={(lockedReviews) => s.set({ lockedReviews })} />
+            </Row>
+          )}
+          {canWorkLocked && s.lockedReviews && (
+            <Row
+              title="Let it run in the background"
+              desc={
+                exempt
+                  ? 'Done: Android leaves Ninja Coach out of battery saving. On a Samsung, also check Settings → Apps → Ninja Coach → Battery → Unrestricted.'
+                  : 'Android pauses apps to save battery once the phone has been locked a while. Allow Ninja Coach to keep going. On a Samsung, also set Settings → Apps → Ninja Coach → Battery → Unrestricted.'
+              }
+            >
+              {exempt ? (
+                <span className="faint">Allowed</span>
+              ) : (
+                <button
+                  className="btn small"
+                  onClick={() => {
+                    askBatteryExempt();
+                    setTimeout(() => setExempt(isBatteryExempt()), 4000);
+                  }}
+                >
+                  Allow
+                </button>
+              )}
+            </Row>
+          )}
           <Row
             title="Keep the screen on while reviewing"
             desc="So the review doesn't stop when the phone goes to sleep. It sleeps as usual once the reviews are done."
@@ -112,16 +150,11 @@ export function SettingsPage() {
 
         <section className="card">
           <h2>Game review</h2>
-          <Row title="Review depth" desc="For your 3 newest games. The rest are reviewed at Fast so all 20 get done sooner.">
-            <Segmented
-              value={s.reviewDepth}
-              onChange={(reviewDepth) => s.set({ reviewDepth })}
-              options={[
-                { value: 12, label: 'Fast' },
-                { value: 16, label: 'Standard' },
-                { value: 20, label: 'Deep' },
-              ]}
-            />
+          <Row
+            title="How games are reviewed"
+            desc="Every game gets a quick review on its own: each move checked fast, and the key moments (brilliant, great, mistakes, misses, blunders) checked again more deeply. For a full deep analysis of a game, open it and tap Run a deep analysis on its Summary tab."
+          >
+            <span />
           </Row>
           <h2 style={{ marginTop: 18 }}>Analysis engine</h2>
           <Row

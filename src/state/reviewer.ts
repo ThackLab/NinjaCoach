@@ -10,7 +10,6 @@ import { analysePositions, buildReview } from '../lib/review/review';
 import type { GameReview, PositionEval } from '../lib/review/types';
 import { moveLesson } from '../lib/review/lessons';
 import { getGame, getReview, saveReview, savePuzzles, type Puzzle } from '../lib/storage/db';
-import { useSettings } from './settings';
 
 export interface ReviewJob {
   gameId: string;
@@ -25,9 +24,22 @@ export interface ReviewJob {
 
 interface ReviewerStore {
   jobs: Record<string, ReviewJob>;
-  start: (gameId: string, opts?: { depth?: number; force?: boolean }) => Promise<GameReview | null>;
+  start: (gameId: string, opts?: { mode?: 'quick' | 'deep'; force?: boolean }) => Promise<GameReview | null>;
   cancel: (gameId: string) => void;
 }
+
+/**
+ * Every game gets a quick review: a fast pass over every move, then a deeper
+ * look at its key moments (brilliant, great, mistakes, misses, blunders and
+ * the position after each), so those are as reliable as a slow review. A deep
+ * analysis of a whole game happens only when you ask for one.
+ */
+const QUICK = { depth: 12, multipv: 2, maxTimeMs: 1500 };
+const CHECK = { depth: 16, multipv: 3, maxTimeMs: 5000 };
+const DEEP = { depth: 20, multipv: 3, maxTimeMs: 12000 };
+const KEY_CLASSES = ['brilliant', 'great', 'mistake', 'miss', 'blunder'];
+/** At most this many positions get the deeper look (two for each key moment). */
+const MAX_CHECK = 30;
 
 const controllers = new Map<string, AbortController>();
 let pool: EnginePool | null = null;
@@ -104,7 +116,9 @@ export const useReviewer = create<ReviewerStore>()((set, get) => ({
     }
     const game = await getGame(gameId);
     if (!game) throw new Error('Game not found');
-    const depth = opts.depth ?? useSettings.getState().reviewDepth;
+    const mode = opts.mode ?? 'quick';
+    const plan = mode === 'deep' ? DEEP : QUICK;
+    const depth = plan.depth;
     const total = game.moves.length + 1;
     const ctrl = new AbortController();
     controllers.set(gameId, ctrl);
@@ -116,11 +130,9 @@ export const useReviewer = create<ReviewerStore>()((set, get) => ({
     try {
       const book = await loadOpeningBook();
       const input = { startFen: game.startFen, moves: game.moves };
-      const positions = await analysePositions(input, {
+      let positions = await analysePositions(input, {
         engines: p.engines,
-        depth,
-        multipv: 3,
-        maxTimeMs: depth >= 20 ? 12000 : 6000,
+        ...plan,
         cache: { get: getEval, put: putEval },
         signal: ctrl.signal,
         onProgress: (done, tot) => update({ done, total: tot }),
@@ -132,12 +144,26 @@ export const useReviewer = create<ReviewerStore>()((set, get) => ({
           update({ partial });
         },
       });
-      const review = buildReview(input, positions, {
-        depth,
-        book,
-        userColor: game.userColor,
-        outcome: { result: game.result, termination: game.termination },
-      });
+      const outcome = { result: game.result, termination: game.termination };
+      if (mode === 'quick') {
+        // The deeper look at the moments that matter.
+        const draft = buildReview(input, positions, { depth, book, userColor: game.userColor, outcome });
+        const key = [...new Set(draft.moves.filter((m) => KEY_CLASSES.includes(m.classification)).flatMap((m) => [m.ply, m.ply + 1]))].slice(
+          0,
+          MAX_CHECK,
+        );
+        if (key.length) {
+          positions = await analysePositions(input, {
+            engines: p.engines,
+            ...CHECK,
+            only: key,
+            prior: positions,
+            cache: { get: getEval, put: putEval },
+            signal: ctrl.signal,
+          });
+        }
+      }
+      const review = { ...buildReview(input, positions, { depth, book, userColor: game.userColor, outcome }), mode };
       await saveReview(gameId, review);
       if (game.userColor) await savePuzzles(puzzlesFrom(review, gameId, game.userColor));
       update({ status: 'done', done: total, partial: [] });

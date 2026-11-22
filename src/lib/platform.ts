@@ -11,6 +11,10 @@ interface AndroidBridge {
   keepScreenOn?(on: boolean): void;
   /** Writes a file in Downloads/Ninja Coach, replacing it if it is there; returns where ('' on failure). App 1.6 and later. */
   writeFile?(name: string, mime: string, content: string): string;
+  /** Starts/stops the service that keeps reviews going with the screen off, or updates its notification. App 1.7 and later. */
+  backgroundWork?(on: boolean, text: string): void;
+  batteryExempt?(): boolean;
+  askBatteryExempt?(): void;
 }
 
 const bridge = (globalThis as { NinjaCoachAndroid?: AndroidBridge }).NinjaCoachAndroid;
@@ -77,6 +81,38 @@ export function saveTextFile(name: string, mime: string, text: string): string |
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   return null;
+}
+
+/** Whether reviews can carry on with the screen off (the Android app). */
+export const canWorkLocked = typeof bridge?.backgroundWork === 'function';
+
+let working = false;
+let lastText = '';
+/** Keeps the app working with the screen off (Android), with `text` in its notification; off when `on` is false. */
+export function setBackgroundWork(on: boolean, text = '') {
+  if (typeof bridge?.backgroundWork !== 'function') return;
+  if (!on && !working) return;
+  if (on && working && text === lastText) return;
+  working = on;
+  lastText = text;
+  try {
+    bridge.backgroundWork(on, text);
+  } catch {
+    // An older app: reviews pause when the screen locks, as before.
+  }
+}
+
+/** Whether Android leaves the app out of battery optimisation (true where it doesn't apply). */
+export function isBatteryExempt(): boolean {
+  try {
+    return typeof bridge?.batteryExempt === 'function' ? bridge.batteryExempt() : true;
+  } catch {
+    return true;
+  }
+}
+
+export function askBatteryExempt() {
+  bridge?.askBatteryExempt?.();
 }
 
 /** Whether this device can keep a file up to date by itself (the Android app). */

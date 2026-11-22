@@ -29,6 +29,12 @@ export interface ReviewOptions {
   signal?: AbortSignal;
   onProgress?: (done: number, total: number) => void;
   onPosition?: (index: number, pos: PositionEval) => void;
+  /**
+   * Look again at only these positions (by index), keeping `prior` for the rest:
+   * the quick review's deeper check of its key moments.
+   */
+  only?: number[];
+  prior?: PositionEval[];
   /** Evaluations already known (e.g. analysed in the background during the game), and where to keep new ones. */
   cache?: {
     get: (fen: string, minDepth: number, multipv: number) => Promise<PositionEval | null>;
@@ -81,8 +87,13 @@ function terminalOf(chess: Chess): PositionEval['terminal'] {
 export async function analysePositions(game: GameInput, opts: ReviewOptions): Promise<PositionEval[]> {
   const { fens, terminal } = buildPlies(game);
   const results: PositionEval[] = new Array(fens.length);
-  const total = fens.length;
   const multipv = opts.multipv ?? 3;
+  if (opts.only && opts.prior) {
+    // Everything else as it was; only the chosen positions are searched again.
+    const redo = new Set(opts.only);
+    for (let i = 0; i < fens.length; i++) if (!redo.has(i) && opts.prior[i]) results[i] = opts.prior[i];
+  }
+  const total = fens.length;
 
   for (let i = 0; i < fens.length; i++) {
     if (terminal[i] === 'checkmate' || terminal[i] === 'stalemate') {
@@ -152,6 +163,7 @@ export async function analysePositions(game: GameInput, opts: ReviewOptions): Pr
     opts.onProgress?.(done, total);
   });
   if (opts.signal?.aborted) throw new DOMException('Review cancelled', 'AbortError');
+  if (opts.only) return results;
 
   // Consistency pass: when the engine's own best move was played, the next
   // position should evaluate about the same. A big jump means one of the two

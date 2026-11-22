@@ -33,6 +33,8 @@ export interface Settings {
   haptics: boolean;
   /** Keep the screen on while the coach is reviewing, so it doesn't stop when the phone sleeps. */
   keepAwake: boolean;
+  /** Keep reviewing with the screen off (Android app: a background service with a notification). */
+  lockedReviews: boolean;
   /** Keep the master sheet of analysed games up to date in Downloads/Ninja Coach (Android app). */
   masterSheet: boolean;
   /** Where the master sheet was last written, when, and how many games it held. */
@@ -79,6 +81,7 @@ export const useSettings = create<Settings>()(
       sound: true,
       haptics: true,
       keepAwake: true,
+      lockedReviews: true,
       masterSheet: true,
       sheetWhere: '',
       sheetSavedAt: 0,

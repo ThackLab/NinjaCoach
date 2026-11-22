@@ -110,6 +110,8 @@ export interface PlayerSummary {
 export interface GameReview {
   version: number;
   depth: number;
+  /** Quick (every game, automatically, with a deeper look at its key moments) or deep (a full analysis you asked for). */
+  mode?: 'quick' | 'deep';
   createdAt: number;
   startFen: string;
   positions: PositionEval[];
