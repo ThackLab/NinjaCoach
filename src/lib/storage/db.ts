@@ -5,6 +5,7 @@ import type { Color } from 'chess.js';
 import type { Classification, GameReview } from '../review/types';
 import { gist } from '../coach/gist';
 import { findMateChances, type MateChance } from '../coach/mates';
+import { gameHash } from '../gameHash';
 
 export type GameSource = 'bot' | 'import' | 'analysis' | 'pgn' | 'local' | 'online';
 export type GameResult = '1-0' | '0-1' | '1/2-1/2' | '*';
@@ -39,6 +40,8 @@ export interface GameRecord {
   /** Accuracy summary once reviewed (kept on the record for fast listing). */
   accuracy?: { w: number; b: number };
   reviewedAt?: number;
+  /** The game's fingerprint: SHA-256 of where it was played, the players, the result and every move. */
+  hash?: string;
   url?: string;
   date?: string;
 }
@@ -112,6 +115,7 @@ export async function saveReview(gameId: string, review: GameReview) {
   if (g) {
     g.accuracy = { w: review.white.accuracy, b: review.black.accuracy };
     g.reviewedAt = review.createdAt;
+    g.hash ??= gameHash(g);
     if (review.opening && !g.opening) g.opening = review.opening.name;
     await set(gameId, g, games);
     if (g.userColor) await set(gameId, summarise(g, review), summaries);
@@ -177,6 +181,17 @@ export async function fillSummaries(): Promise<void> {
     const r = await get<GameReview>(id, reviews);
     if (r) await set(id, summarise(g, r), summaries);
   }
+}
+
+/** Gives every reviewed game its fingerprint, for games reviewed before fingerprints existed. */
+export async function fillHashes(): Promise<void> {
+  let any = false;
+  for (const [id, g] of await entries<string, GameRecord>(games)) {
+    if (!g.reviewedAt || g.hash) continue;
+    await set(id, { ...g, hash: gameHash(g) }, games);
+    any = true;
+  }
+  if (any) changed();
 }
 
 export async function getReview(gameId: string): Promise<GameReview | undefined> {

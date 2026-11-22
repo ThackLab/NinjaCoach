@@ -4,9 +4,11 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -187,6 +189,45 @@ public class MainActivity extends Activity {
                 if (dir == null) return "";
                 File file = new File(dir, name);
                 try (FileOutputStream os = new FileOutputStream(file)) {
+                    os.write(bytes);
+                }
+                return file.getAbsolutePath();
+            } catch (Exception e) {
+                return "";
+            }
+        }
+
+        /** Writes Downloads/Ninja Coach/name, replacing the file if this app made it before. */
+        @JavascriptInterface
+        public String writeFile(String name, String mime, String content) {
+            byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
+            try {
+                if (Build.VERSION.SDK_INT >= 29) {
+                    String rel = Environment.DIRECTORY_DOWNLOADS + "/Ninja Coach/";
+                    Uri collection = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
+                    Uri uri = null;
+                    String where = MediaStore.MediaColumns.DISPLAY_NAME + "=? AND " + MediaStore.MediaColumns.RELATIVE_PATH + "=?";
+                    try (Cursor c = getContentResolver().query(collection, new String[] { MediaStore.MediaColumns._ID }, where, new String[] { name, rel }, null)) {
+                        if (c != null && c.moveToFirst()) uri = ContentUris.withAppendedId(collection, c.getLong(0));
+                    }
+                    if (uri == null) {
+                        ContentValues values = new ContentValues();
+                        values.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
+                        values.put(MediaStore.MediaColumns.MIME_TYPE, mime);
+                        values.put(MediaStore.MediaColumns.RELATIVE_PATH, rel);
+                        uri = getContentResolver().insert(collection, values);
+                        if (uri == null) return "";
+                    }
+                    try (OutputStream os = getContentResolver().openOutputStream(uri, "wt")) {
+                        if (os == null) return "";
+                        os.write(bytes);
+                    }
+                    return "Downloads/Ninja Coach/" + name;
+                }
+                File dir = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "Ninja Coach");
+                if (!dir.exists() && !dir.mkdirs()) return "";
+                File file = new File(dir, name);
+                try (FileOutputStream os = new FileOutputStream(file, false)) {
                     os.write(bytes);
                 }
                 return file.getAbsolutePath();

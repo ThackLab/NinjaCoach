@@ -9,6 +9,7 @@ import { useSync, watchForGames } from './state/sync';
 import { useReviewer } from './state/reviewer';
 import { useSettings } from './state/settings';
 import { keepScreenOn } from './lib/platform';
+import { watchMasterSheet } from './lib/sheetWatch';
 
 // Screens other than the coach load when first opened, and in the background once the app is idle.
 const ReviewPage = lazy(() => import('./pages/Review').then((m) => ({ default: m.ReviewPage })));
@@ -19,6 +20,7 @@ const StatsPage = lazy(() => import('./pages/Stats').then((m) => ({ default: m.S
 const GamesPage = lazy(() => import('./pages/Games').then((m) => ({ default: m.GamesPage })));
 const MomentsPage = lazy(() => import('./pages/Moments').then((m) => ({ default: m.MomentsPage })));
 const SenseiPage = lazy(() => import('./pages/Sensei').then((m) => ({ default: m.SenseiPage })));
+const SheetPage = lazy(() => import('./pages/Sheet').then((m) => ({ default: m.SheetPage })));
 const MatesPage = lazy(() => import('./pages/Mates').then((m) => ({ default: m.MatesPage })));
 const LATER = [
   () => import('./pages/Review'),
@@ -47,6 +49,9 @@ export function App() {
     idle(() => LATER.forEach((load) => void load().catch(() => undefined)));
     void loadOpeningBook();
     watchForGames();
+    watchMasterSheet();
+    // Ask the browser to keep this app's storage (reviews, games) even when space runs low.
+    void navigator.storage?.persist?.().catch(() => undefined);
     setTimeout(() => void pruneEvals(), 5000);
   }, []);
 
@@ -91,6 +96,9 @@ export function App() {
         break;
       case 'sensei':
         page = <SenseiPage />;
+        break;
+      case 'sheet':
+        page = <SheetPage />;
         break;
       case 'mates':
         page = <MatesPage />;

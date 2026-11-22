@@ -9,6 +9,8 @@ interface AndroidBridge {
   vibrate?(pattern: string): void;
   /** Keeps the screen on, or lets it sleep (app version 1.3 and later). */
   keepScreenOn?(on: boolean): void;
+  /** Writes a file in Downloads/Ninja Coach, replacing it if it is there; returns where ('' on failure). App 1.6 and later. */
+  writeFile?(name: string, mime: string, content: string): string;
 }
 
 const bridge = (globalThis as { NinjaCoachAndroid?: AndroidBridge }).NinjaCoachAndroid;
@@ -75,6 +77,15 @@ export function saveTextFile(name: string, mime: string, text: string): string |
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   return null;
+}
+
+/** Whether this device can keep a file up to date by itself (the Android app). */
+export const canKeepFiles = typeof bridge?.writeFile === 'function';
+
+/** Rewrites a file kept on the phone (Downloads/Ninja Coach); null where that isn't possible. */
+export function keepFileUpdated(name: string, mime: string, text: string): string | null {
+  if (typeof bridge?.writeFile !== 'function') return null;
+  return bridge.writeFile(name, mime, text) || null;
 }
 
 /**

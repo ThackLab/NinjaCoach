@@ -89,9 +89,10 @@ export const useSync = create<SyncState>()(
               await saveGame({ ...have, clock: rec.clock, clocks: rec.clocks, termination: rec.termination ?? have.termination });
             }
           }
-          // Older games drop off, with their reviews.
+          // Older games that were never reviewed drop off. Reviewed games stay for good: their
+          // reviews, fingerprints and place in the master sheet are kept whatever the window.
           const ids = new Set(keep.map((r) => r.id));
-          for (const g of await listGames()) if (g.source === 'import' && !ids.has(g.id)) await deleteGame(g.id);
+          for (const g of await listGames()) if (g.source === 'import' && !ids.has(g.id) && !g.reviewedAt) await deleteGame(g.id);
           set({ syncing: false, fetched: null, lastSync: Date.now(), lastNew: added });
         } catch (e) {
           set({ syncing: false, fetched: null, lastSync: Date.now(), lastError: e instanceof Error ? e.message : String(e) });
@@ -157,12 +158,17 @@ export function watchForGames() {
 /** Your games, kept up to date (newest first), and how many are reviewed. */
 export function useLibrary(): { games: GameRecord[] | null; reviewed: number } {
   const [games, setGames] = useState<GameRecord[] | null>(null);
+  const keep = useSync((st) => st.keep);
   useEffect(() => {
-    // Your chess.com games (games against Sensei are kept apart).
+    // Your newest chess.com games, as many as the window (games against Sensei are kept apart,
+    // and older reviewed games stay in the Games list and the master sheet).
     const load = () =>
-      void listGames().then((all) => setGames(all.filter((g) => g.userColor && g.source !== 'bot').sort((a, b) => b.createdAt - a.createdAt)));
+      void listGames().then((all) => {
+        const mine = all.filter((g) => g.userColor && g.source !== 'bot').sort((a, b) => b.createdAt - a.createdAt);
+        setGames(keep ? mine.slice(0, keep) : mine);
+      });
     load();
     return onDbChange(load);
-  }, []);
+  }, [keep]);
   return { games, reviewed: games?.filter((g) => g.reviewedAt).length ?? 0 };
 }

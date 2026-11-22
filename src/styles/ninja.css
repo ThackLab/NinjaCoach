@@ -1041,3 +1041,70 @@ body .orientation-black coords.files coord:nth-child(odd) {
 .nc-window .faint {
   font-size: 0.78rem;
 }
+
+/* ---------------------------------------------------------------- master sheet */
+.sheet-info {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.sheet-info p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.sheet-rows {
+  display: grid;
+  gap: 6px;
+}
+.sheet-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+.sheet-row button {
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  padding: 0;
+}
+.sheet-row .result-chip {
+  padding: 0;
+}
+.sheet-main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.sheet-main .faint {
+  font-size: 0.78rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sheet-title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sheet-row .sheet-hash {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  background: var(--surface-3);
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+.gr-hash {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  color: var(--text-faint);
+}

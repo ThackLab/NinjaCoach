@@ -6,7 +6,8 @@ import { backupNow } from '../lib/backup';
 import { useSettings } from '../state/settings';
 import { PageHead } from '../components/ui';
 import { useSync } from '../state/sync';
-import { canVibrate } from '../lib/platform';
+import { canKeepFiles, canVibrate } from '../lib/platform';
+import { navigate } from '../lib/router';
 
 function Row({ title, desc, children }: { title: string; desc?: string; children: React.ReactNode }) {
   return (
@@ -174,6 +175,29 @@ export function SettingsPage() {
               style={{ width: 220 }}
             />
           </Row>
+        </section>
+
+        <section className="card">
+          <h2>Master sheet</h2>
+          <p className="muted" style={{ fontSize: '0.88rem' }}>
+            Every analysed game stays analysed, each with its own fingerprint (SHA-256 of the game), listed in the master sheet.
+            {canKeepFiles && ' The Android app keeps it up to date as a spreadsheet in Downloads/Ninja Coach.'}
+          </p>
+          {canKeepFiles && (
+            <Row
+              title="Keep the spreadsheet on this phone"
+              desc={
+                s.sheetSavedAt
+                  ? `Last updated ${new Date(s.sheetSavedAt).toLocaleString()} (${s.sheetGames} games).`
+                  : 'Written after the next game is analysed.'
+              }
+            >
+              <Toggle checked={s.masterSheet} onChange={(masterSheet) => s.set({ masterSheet })} />
+            </Row>
+          )}
+          <button className="btn" onClick={() => navigate('/sheet')}>
+            Open the master sheet
+          </button>
         </section>
 
         <section className="card">

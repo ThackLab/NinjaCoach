@@ -5,6 +5,7 @@ import { navigate } from '../lib/router';
 import { Segmented } from '../components/Widgets';
 import { PageHead } from '../components/ui';
 import { useReviewer } from '../state/reviewer';
+import { shortHash } from '../lib/gameHash';
 
 export function useGames() {
   const [games, setGames] = useState<GameRecord[] | null>(null);
@@ -59,6 +60,7 @@ export function GameListRow({ g, actions }: { g: GameRecord; actions?: boolean }
           {g.opening ? `${g.opening} · ` : ''}
           {Math.ceil(g.moves.length / 2)} moves · {when(g.createdAt)}
         </span>
+        {g.hash && <span className="gr-hash">#{shortHash(g.hash)}</span>}
       </span>
       {job?.status === 'running' ? (
         <span className="pill">{Math.round((job.done / job.total) * 100)}%</span>
@@ -113,7 +115,15 @@ export function GamesPage() {
 
   return (
     <div className="page narrow">
-      <PageHead title="Games" sub={queued ? `${queued} waiting for their review (newest first)` : undefined} />
+      <PageHead
+        title="Games"
+        sub={queued ? `${queued} waiting for their review (newest first)` : undefined}
+        right={
+          <button className="btn small" onClick={() => navigate('/sheet')}>
+            Master sheet
+          </button>
+        }
+      />
       <div style={{ display: 'grid', gap: 10, marginBottom: 14 }}>
         <input placeholder="Search players or openings" value={q} onChange={(e) => setQ(e.target.value)} />
         <Segmented
