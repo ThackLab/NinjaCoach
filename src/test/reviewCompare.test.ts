@@ -8,7 +8,7 @@ import { Chess } from 'chess.js';
 import { nodeEngine } from './nodeEngine';
 import { chooseBotMove } from '../lib/bots/brain';
 import type { BotProfile } from '../lib/bots/bots';
-import { analysePositions, buildReview } from '../lib/review/review';
+import { analysePositions, buildReview, keyPositions } from '../lib/review/review';
 import type { Classification, GameReview, PositionEval } from '../lib/review/types';
 import { START_FEN, playUci } from '../lib/chess/utils';
 import type { Engine } from '../lib/engine/engine';
@@ -41,7 +41,7 @@ async function review(
   let positions: PositionEval[] = await analysePositions(input, { engines, ...plan });
   let r = buildReview(input, positions, { depth: plan.depth });
   if (check) {
-    const key = [...new Set(r.moves.filter((m) => KEY.includes(m.classification)).flatMap((m) => [m.ply, m.ply + 1]))].slice(0, 30);
+    const key = keyPositions(r, positions, 40);
     if (key.length) positions = await analysePositions(input, { engines, ...check, only: key, prior: positions });
     r = buildReview(input, positions, { depth: plan.depth });
   }

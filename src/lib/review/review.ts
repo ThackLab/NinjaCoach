@@ -16,7 +16,7 @@ import {
   type PositionEval,
   type ReviewedMove,
 } from './types';
-import { clampedCp, winPercent } from './winprob';
+import { clampedCp, expectedFor, winPercent } from './winprob';
 
 export interface ReviewOptions {
   engines: Engine[];
@@ -207,6 +207,40 @@ function detectPhases(plies: Ply[], bookEnd: number): Phase[] {
 
 function emptyCounts(): Record<Classification, number> {
   return Object.fromEntries(CLASS_ORDER.map((c) => [c, 0])) as Record<Classification, number>;
+}
+
+/**
+ * The positions a quick review looks at again more deeply: every move it
+ * rated an inaccuracy or worse, or brilliant or great; any move that lost
+ * even a little; and any position where only one move held (a "great" move
+ * a fast search can miss). Both the position before and after each.
+ */
+export function keyPositions(review: GameReview, positions: PositionEval[], max = 40): number[] {
+  const out = new Set<number>();
+  const take = new Set<Classification>(['brilliant', 'great', 'inaccuracy', 'mistake', 'miss', 'blunder']);
+  const ranked = review.moves
+    .map((m) => {
+      const before = positions[m.ply];
+      const first = before?.lines[0];
+      const second = before?.lines[1];
+      const gap = first && second ? expectedFor(first.score, m.color) - expectedFor(second.score, m.color) : 0;
+      const weight = take.has(m.classification)
+        ? 2 + m.epLoss
+        : m.epLoss >= 0.03
+          ? 1 + m.epLoss
+          : gap >= 0.12 && m.epBefore > 0.25 && m.epBefore < 0.92
+            ? 0.5 + gap
+            : 0;
+      return { m, weight };
+    })
+    .filter((x) => x.weight > 0)
+    .sort((a, b) => b.weight - a.weight);
+  for (const { m } of ranked) {
+    if (out.size >= max) break;
+    out.add(m.ply);
+    out.add(m.ply + 1);
+  }
+  return [...out].sort((a, b) => a - b);
 }
 
 /** Turns position evaluations into a full review (pure - no engine access). */

@@ -6,7 +6,7 @@ import type { Color } from 'chess.js';
 import { EnginePool, defaultPoolSize } from '../lib/engine/manager';
 import { isMobile } from '../lib/platform';
 import { loadOpeningBook } from '../lib/chess/openings';
-import { analysePositions, buildReview } from '../lib/review/review';
+import { analysePositions, buildReview, keyPositions } from '../lib/review/review';
 import type { GameReview, PositionEval } from '../lib/review/types';
 import { moveLesson } from '../lib/review/lessons';
 import { getGame, getReview, saveReview, savePuzzles, type Puzzle } from '../lib/storage/db';
@@ -37,9 +37,8 @@ interface ReviewerStore {
 const QUICK = { depth: 12, multipv: 2, maxTimeMs: 1500 };
 const CHECK = { depth: 16, multipv: 3, maxTimeMs: 5000 };
 const DEEP = { depth: 20, multipv: 3, maxTimeMs: 12000 };
-const KEY_CLASSES = ['brilliant', 'great', 'mistake', 'miss', 'blunder'];
-/** At most this many positions get the deeper look (two for each key moment). */
-const MAX_CHECK = 30;
+/** At most this many positions get the deeper look. */
+const MAX_CHECK = 40;
 
 const controllers = new Map<string, AbortController>();
 let pool: EnginePool | null = null;
@@ -148,10 +147,7 @@ export const useReviewer = create<ReviewerStore>()((set, get) => ({
       if (mode === 'quick') {
         // The deeper look at the moments that matter.
         const draft = buildReview(input, positions, { depth, book, userColor: game.userColor, outcome });
-        const key = [...new Set(draft.moves.filter((m) => KEY_CLASSES.includes(m.classification)).flatMap((m) => [m.ply, m.ply + 1]))].slice(
-          0,
-          MAX_CHECK,
-        );
+        const key = keyPositions(draft, positions, MAX_CHECK);
         if (key.length) {
           positions = await analysePositions(input, {
             engines: p.engines,
