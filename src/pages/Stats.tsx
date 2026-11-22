@@ -32,7 +32,7 @@ const ENDING: Record<string, string> = {
 };
 
 /** Wins, draws and losses as one bar, with the counts written beside it. */
-function WdlBar({ wdl }: { wdl: WDL }) {
+export function WdlBar({ wdl }: { wdl: WDL }) {
   const seg = (n: number, cls: string, label: string) =>
     n > 0 ? <span className={`st-seg ${cls}`} style={{ flexGrow: n }} title={`${n} ${label}`} /> : null;
   return (
@@ -477,7 +477,7 @@ export function StatsPage() {
       {/* ------------------------------------------------ openings */}
       {s.openings.length > 0 && (
         <>
-          <SectionTitle>Openings</SectionTitle>
+          <SectionTitle action={{ label: 'Opening explorer', href: '#/openings' }}>Openings</SectionTitle>
           {(['w', 'b'] as const).map((c) => {
             const rows = s.openings.filter((o) => o.color === c);
             if (!rows.length) return null;

@@ -192,6 +192,11 @@ export function HomePage() {
         )
       )}
 
+      <button className="nc-link nc-explorer" onClick={() => navigate('/openings')}>
+        <b>Opening explorer</b>
+        <span className="faint">Your openings move by move from your own games, and where they go wrong</span>
+        <ChevronRight size={18} />
+      </button>
       <button className="nc-sensei" onClick={() => navigate('/sensei')}>
         <span className="nc-sensei-face" aria-hidden>
           🥷

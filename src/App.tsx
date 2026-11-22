@@ -20,6 +20,7 @@ const StatsPage = lazy(() => import('./pages/Stats').then((m) => ({ default: m.S
 const GamesPage = lazy(() => import('./pages/Games').then((m) => ({ default: m.GamesPage })));
 const MomentsPage = lazy(() => import('./pages/Moments').then((m) => ({ default: m.MomentsPage })));
 const SenseiPage = lazy(() => import('./pages/Sensei').then((m) => ({ default: m.SenseiPage })));
+const ExplorerPage = lazy(() => import('./pages/Explorer').then((m) => ({ default: m.ExplorerPage })));
 const SheetPage = lazy(() => import('./pages/Sheet').then((m) => ({ default: m.SheetPage })));
 const MatesPage = lazy(() => import('./pages/Mates').then((m) => ({ default: m.MatesPage })));
 const LATER = [
@@ -113,6 +114,9 @@ export function App() {
         break;
       case 'sensei':
         page = <SenseiPage />;
+        break;
+      case 'openings':
+        page = <ExplorerPage />;
         break;
       case 'sheet':
         page = <SheetPage />;
