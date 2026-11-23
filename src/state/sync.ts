@@ -8,12 +8,25 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { chessComArchiveGames, chessComArchives, toRecord } from '../lib/importGames';
 import { deleteGame, getGame, listGames, onDbChange, saveGame, type GameRecord } from '../lib/storage/db';
+import { timeClassOf } from '../lib/stats';
 import { useReviewer } from './reviewer';
 
 const RECHECK = 10 * 60_000;
 /** How many of your latest games the coach can keep and review; 0 is all of them. */
 export const WINDOWS = [20, 50, 100, 200, 0] as const;
 export type GameWindow = (typeof WINDOWS)[number];
+/** Which kind of games the coach looks at: one time control, or all of them together. */
+export type GameType = 'all' | 'rapid' | 'blitz' | 'bullet' | 'daily';
+export const TYPE_LABEL: Record<GameType, string> = { all: 'All', rapid: 'Rapid', blitz: 'Blitz', bullet: 'Bullet', daily: 'Daily' };
+const typeOf = (g: GameRecord) => timeClassOf(g) as GameType;
+
+/** Your chess.com games of the chosen kind, newest first, as many as the window (Sensei's games kept apart). */
+export function windowGames(all: GameRecord[], keep: GameWindow, type: GameType): GameRecord[] {
+  const mine = all
+    .filter((g) => g.userColor && g.source !== 'bot' && (type === 'all' || typeOf(g) === type))
+    .sort((a, b) => b.createdAt - a.createdAt);
+  return keep ? mine.slice(0, keep) : mine;
+}
 let resync = false;
 
 interface SyncState {
@@ -23,6 +36,7 @@ interface SyncState {
   syncing: boolean;
   /** How many of your latest games to keep and review (0 = all). */
   keep: GameWindow;
+  gameType: GameType;
   /** While fetching: months looked through of all your months, and the games found so far. */
   fetched: { done: number; total: number; games: number } | null;
   /** How many games the last sync brought in. */
@@ -31,6 +45,7 @@ interface SyncState {
   debriefed: Record<string, number>;
   setUsername: (name: string) => void;
   setKeep: (n: GameWindow) => void;
+  setGameType: (t: GameType) => void;
   markDebriefed: (id: string) => void;
   sync: (force?: boolean) => Promise<void>;
 }
@@ -43,6 +58,7 @@ export const useSync = create<SyncState>()(
       lastError: '',
       syncing: false,
       keep: 20,
+      gameType: 'all',
       fetched: null,
       lastNew: 0,
       debriefed: {},
@@ -50,6 +66,12 @@ export const useSync = create<SyncState>()(
       setKeep: (keep) => {
         if (keep === get().keep) return;
         set({ keep, lastSync: 0 });
+        if (get().syncing) resync = true;
+        else void get().sync(true);
+      },
+      setGameType: (gameType) => {
+        if (gameType === get().gameType) return;
+        set({ gameType, lastSync: 0 });
         if (get().syncing) resync = true;
         else void get().sync(true);
       },
@@ -66,10 +88,12 @@ export const useSync = create<SyncState>()(
           const archives = [...(await chessComArchives(s.username))].reverse();
           const found: GameRecord[] = [];
           set({ fetched: { done: 0, total: archives.length, games: 0 } });
+          // Only games of the chosen kind count towards the window.
+          const counts = (r: GameRecord) => s.gameType === 'all' || typeOf(r) === s.gameType;
           for (const [i, url] of archives.entries()) {
             for (const c of await chessComArchiveGames(url)) {
               const rec = toRecord(c, s.username);
-              if (rec?.userColor) found.push(rec);
+              if (rec?.userColor && counts(rec)) found.push(rec);
             }
             set({ fetched: { done: i + 1, total: archives.length, games: found.length } });
             if (found.length >= limit) break;
@@ -106,7 +130,14 @@ export const useSync = create<SyncState>()(
       // Version 2 keeps only the last 20 games: check again straight away after the update.
       version: 2,
       migrate: (old) => ({ ...(old as object), lastSync: 0 }) as SyncState,
-      partialize: (s) => ({ username: s.username, keep: s.keep, lastSync: s.lastSync, lastNew: s.lastNew, debriefed: s.debriefed }),
+      partialize: (s) => ({
+        username: s.username,
+        keep: s.keep,
+        gameType: s.gameType,
+        lastSync: s.lastSync,
+        lastNew: s.lastNew,
+        debriefed: s.debriefed,
+      }),
     },
   ),
 );
@@ -154,16 +185,34 @@ export function watchForGames() {
 export function useLibrary(): { games: GameRecord[] | null; reviewed: number } {
   const [games, setGames] = useState<GameRecord[] | null>(null);
   const keep = useSync((st) => st.keep);
+  const type = useSync((st) => st.gameType);
   useEffect(() => {
-    // Your newest chess.com games, as many as the window (games against Sensei are kept apart,
-    // and older reviewed games stay in the Games list and the master sheet).
+    // Your newest chess.com games of the chosen kind, as many as the window (games against Sensei
+    // are kept apart, and older reviewed games stay in the Games list and the master sheet).
+    const load = () => void listGames().then((all) => setGames(windowGames(all, keep, type)));
+    load();
+    return onDbChange(load);
+  }, [keep, type]);
+  return { games, reviewed: games?.filter((g) => g.reviewedAt).length ?? 0 };
+}
+
+/** The kinds of games you have played (most played first), for the toggle. */
+export function useGameTypes(): GameType[] {
+  const [types, setTypes] = useState<GameType[]>([]);
+  useEffect(() => {
     const load = () =>
       void listGames().then((all) => {
-        const mine = all.filter((g) => g.userColor && g.source !== 'bot').sort((a, b) => b.createdAt - a.createdAt);
-        setGames(keep ? mine.slice(0, keep) : mine);
+        const n = new Map<GameType, number>();
+        for (const g of all) if (g.userColor && g.source !== 'bot') n.set(typeOf(g), (n.get(typeOf(g)) ?? 0) + 1);
+        setTypes(
+          [...n.entries()]
+            .filter(([t]) => t in TYPE_LABEL)
+            .sort((a, b) => b[1] - a[1])
+            .map(([t]) => t),
+        );
       });
     load();
     return onDbChange(load);
-  }, [keep]);
-  return { games, reviewed: games?.filter((g) => g.reviewedAt).length ?? 0 };
+  }, []);
+  return types;
 }

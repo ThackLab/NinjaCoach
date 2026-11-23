@@ -3,21 +3,19 @@
 import { useEffect, useState } from 'react';
 import { getReview, listGames, onDbChange } from '../lib/storage/db';
 import type { StatGame } from '../lib/stats';
-import { useSync } from './sync';
+import { useSync, windowGames } from './sync';
 import { useSummaries } from './summaries';
 
 export function useStatGames(): StatGame[] | null {
   const summaries = useSummaries();
   const keep = useSync((st) => st.keep);
+  const type = useSync((st) => st.gameType);
   const [list, setList] = useState<StatGame[] | null>(null);
   useEffect(() => {
     if (!summaries) return;
     let alive = true;
     const load = async () => {
-      const games = (await listGames())
-        .filter((g) => g.userColor && g.source !== 'bot')
-        .sort((a, b) => b.createdAt - a.createdAt)
-        .slice(0, keep || undefined);
+      const games = windowGames(await listGames(), keep, type);
       const out: StatGame[] = [];
       for (const game of games) {
         const review = game.reviewedAt ? await getReview(game.id) : undefined;
@@ -36,6 +34,6 @@ export function useStatGames(): StatGame[] | null {
       alive = false;
       off();
     };
-  }, [summaries, keep]);
+  }, [summaries, keep, type]);
   return list;
 }

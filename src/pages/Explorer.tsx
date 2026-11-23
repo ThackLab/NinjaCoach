@@ -17,6 +17,7 @@ import { navigate } from '../lib/router';
 import { useStatGames } from '../state/statGames';
 import { useSync } from '../state/sync';
 import { WdlBar } from './Stats';
+import { TypeToggle } from '../components/TypeToggle';
 
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 
@@ -74,6 +75,9 @@ export function ExplorerPage() {
           { value: 'b', label: 'As Black' },
         ]}
       />
+      <div style={{ marginTop: 10 }}>
+        <TypeToggle />
+      </div>
 
       {leaks.length > 0 && line.length === 0 && (
         <>

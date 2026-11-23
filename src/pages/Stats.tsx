@@ -10,8 +10,9 @@ import { Segmented } from '../components/Widgets';
 import { computeInsights } from '../lib/insights';
 import { navigate } from '../lib/router';
 import { CLASS_META } from '../lib/review/types';
-import { computeStats, timeClassOf, type Bucket, type Stats, type WDL } from '../lib/stats';
+import { computeStats, type Bucket, type Stats, type WDL } from '../lib/stats';
 import { useStatGames } from '../state/statGames';
+import { TypeToggle, typeWord } from '../components/TypeToggle';
 import { useSync, WINDOWS, type GameWindow } from '../state/sync';
 
 const pct = (x: number) => `${Math.round(x * 100)}%`;
@@ -169,11 +170,10 @@ const open = (id: string) => () => navigate(`/review/${id}`);
 export function StatsPage() {
   const all = useStatGames();
   const keep = useSync((st) => st.keep);
+  const gameType = useSync((st) => st.gameType);
   const setKeep = useSync((st) => st.setKeep);
   const syncing = useSync((st) => st.syncing);
-  const [tc, setTc] = useState('all');
-  const classes = useMemo(() => [...new Set((all ?? []).map((x) => timeClassOf(x.game)))], [all]);
-  const list = useMemo(() => (all ?? []).filter((x) => tc === 'all' || timeClassOf(x.game) === tc), [all, tc]);
+  const list = useMemo(() => all ?? [], [all]);
   const s: Stats | null = useMemo(() => (list.length ? computeStats(list) : null), [list]);
   const patterns = useMemo(() => {
     const reviewed = list.filter((x) => x.review).map((x) => ({ game: x.game, review: x.review!, color: x.color }));
@@ -189,13 +189,12 @@ export function StatsPage() {
       </div>
     );
   }
-  const label = (k: string) => ({ bullet: 'Bullet', blitz: 'Blitz', rapid: 'Rapid', daily: 'Daily' })[k] ?? 'Other';
 
   return (
     <div className="page narrow stats">
       <PageHead
         title="Stats"
-        sub={`${keep ? `Your last ${s.games}` : `All ${s.games} of your`} game${s.games === 1 ? '' : 's'}${s.reviewed < s.games ? ` · ${s.reviewed} reviewed so far` : ''}`}
+        sub={`${keep ? `Your last ${s.games}` : `All ${s.games} of your`} ${typeWord(gameType)}game${s.games === 1 ? '' : 's'}${s.reviewed < s.games ? ` · ${s.reviewed} reviewed so far` : ''}`}
       />
       <div className="st-filter">
         <div className="st-filter-k">Games</div>
@@ -208,16 +207,7 @@ export function StatsPage() {
           </p>
         )}
       </div>
-      {classes.length > 1 && (
-        <div className="st-filter">
-          <div className="st-filter-k">Time control</div>
-          <Segmented
-            value={tc}
-            onChange={setTc}
-            options={[{ value: 'all', label: 'All types' }, ...classes.map((c) => ({ value: c, label: label(c) }))]}
-          />
-        </div>
-      )}
+      <TypeToggle label="Time control" />
 
       {/* ------------------------------------------------ overview */}
       <section className="card-box st-hero">

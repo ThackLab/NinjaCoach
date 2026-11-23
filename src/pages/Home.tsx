@@ -15,6 +15,7 @@ import { useReviewer } from '../state/reviewer';
 import { useRecentReviews, useSummaries } from '../state/summaries';
 import { useLibrary, useSync, WINDOWS, type GameWindow } from '../state/sync';
 import { Segmented } from '../components/Widgets';
+import { TypeToggle, typeWord } from '../components/TypeToggle';
 import { usePracticeDue } from '../state/practice';
 import { useSettings } from '../state/settings';
 import { useSensei } from '../state/sensei';
@@ -106,7 +107,11 @@ export function HomePage() {
         <section className="card-box nc-status">
           {sync.syncing ? (
             <>
-              <b>{sync.keep ? `Fetching your last ${sync.keep} games from chess.com…` : 'Fetching all your games from chess.com…'}</b>
+              <b>
+                {sync.keep
+                  ? `Fetching your last ${sync.keep} ${typeWord(sync.gameType)}games from chess.com…`
+                  : `Fetching all your ${typeWord(sync.gameType)}games from chess.com…`}
+              </b>
               <span className="faint">
                 {sync.fetched
                   ? sync.keep
@@ -214,11 +219,12 @@ export function HomePage() {
             {last20.length < total
               ? `Reviewed so far: ${last20.length} of ${total}`
               : last20.length === 1
-                ? 'Your last game'
+                ? `Your last ${typeWord(sync.gameType)}game`
                 : sync.keep
-                  ? `Your last ${last20.length} games`
-                  : `All ${last20.length} of your games`}
+                  ? `Your last ${last20.length} ${typeWord(sync.gameType)}games`
+                  : `All ${last20.length} of your ${typeWord(sync.gameType)}games`}
           </SectionTitle>
+          <TypeToggle />
           <div className="nc-window">
             <span className="faint">Averages over</span>
             <Segmented<GameWindow>
