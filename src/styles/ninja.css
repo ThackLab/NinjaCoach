@@ -1266,3 +1266,462 @@ body .orientation-black coords.files coord:nth-child(odd) {
 .ex-game .faint {
   font-size: 0.8rem;
 }
+
+/* ---------------------------------------------------------------- the coach screen on one screen */
+.nc-dash {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.nc-work {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+}
+.nc-work.warn b {
+  color: #e8a33d;
+}
+.nc-work-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+}
+.nc-work-top b {
+  flex: 1;
+}
+.nc-mini {
+  border: 0;
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: var(--surface-3);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.nc-strip {
+  display: grid;
+  grid-template-columns: repeat(20, minmax(0, 1fr));
+  gap: 3px;
+}
+.nc-dot {
+  height: 14px;
+  padding: 0;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 4px;
+  background: transparent;
+}
+.nc-dot.done {
+  border-color: transparent;
+}
+.nc-dot.done.w {
+  background: #2f9e8a;
+}
+.nc-dot.done.d {
+  background: #565067;
+}
+.nc-dot.done.l {
+  background: #e8553f;
+}
+.nc-dot.now {
+  border-color: var(--accent);
+  background: linear-gradient(to top, var(--accent) var(--p, 0%), transparent var(--p, 0%));
+}
+.nc-next {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #4b3a9a, #2a2056);
+  color: #fff;
+  font: inherit;
+  text-align: left;
+}
+.nc-next-body {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.nc-next-body .faint {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+.nc-next-body b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nc-next-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--accent);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.nc-caught {
+  margin: 0;
+  font-size: 0.86rem;
+}
+.nc-sum {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+}
+.nc-sum-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nc-pill select {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 6px 28px 6px 12px;
+  background: var(--surface-3)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23bdb7cc' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")
+    no-repeat right 10px center;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+.nc-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.84rem;
+  color: var(--text-dim);
+}
+.nc-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.nc-tiles > div {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--surface-3);
+  min-width: 0;
+}
+.nc-tiles .k {
+  font-size: 0.72rem;
+  color: var(--text-faint);
+}
+.nc-tiles b {
+  font-size: 1.08rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nc-tiles small {
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+.nc-tiles small.up {
+  color: #2f9e8a;
+}
+.nc-tiles small.down {
+  color: #e8553f;
+}
+.nc-keys {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+}
+.nc-key {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 6px 0;
+  border: 0;
+  border-radius: 10px;
+  background: var(--surface-3);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.92rem;
+}
+.nc-sum-note {
+  margin: -2px 0 0;
+  font-size: 0.76rem;
+}
+.nc-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.nc-tile {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+}
+.nc-tile.sensei {
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.nc-tile-ico {
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #4b3a9a;
+  color: #fff;
+  font-size: 1.15rem;
+}
+.nc-tile .faint {
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nc-habit {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  font-size: 0.92rem;
+}
+.st-pickers {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.st-tabs {
+  margin: 0 -16px 12px;
+  padding: 6px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+.st-tabs button {
+  font-size: 0.86rem;
+  padding: 9px 4px;
+}
+
+/* ---------------------------------------------------------------- Stats, dense enough for one screen a tab */
+.stats .page-head {
+  margin-bottom: 8px;
+}
+.stats .page-head h1 {
+  font-size: 1.5rem;
+}
+.stats .page-head .sub {
+  font-size: 0.82rem;
+}
+.stats .st-note {
+  margin: -4px 0 6px;
+  font-size: 0.76rem;
+}
+.stats .section-title {
+  margin: 14px 0 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.stats .section-title a {
+  font-size: 0.8rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.stats .st-hero {
+  padding: 10px 12px;
+  margin-bottom: 0;
+}
+.stats .st-hero-top {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.stats .st-big {
+  font-size: 1.9rem;
+}
+.stats .st-tiles {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.stats .st-tiles.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.stats .st-tiles.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.stats .st-tile {
+  padding: 6px 8px;
+  border-radius: 10px;
+  gap: 0;
+}
+.stats .st-tile .k {
+  font-size: 0.66rem;
+  line-height: 1.2;
+}
+.stats .st-tile .v {
+  font-size: 1.02rem;
+}
+.stats .st-tile .s {
+  font-size: 0.66rem;
+  line-height: 1.25;
+  white-space: normal;
+}
+.stats .st-card {
+  padding: 8px 10px;
+  margin-bottom: 6px;
+}
+.stats .st-card-head {
+  margin-bottom: 6px;
+}
+.stats .st-mid {
+  font-size: 1.15rem;
+}
+.stats .st-trend {
+  margin-top: 4px;
+}
+.stats .st-trend svg {
+  height: 44px !important;
+}
+.stats .st-trend-read {
+  font-size: 0.7rem;
+}
+/* One line per row: what it is, the bar, the counts, the score. */
+.stats .st-rows {
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.stats .st-row {
+  grid-template-columns: minmax(0, 8.5rem) 1fr auto;
+  gap: 8px;
+}
+.stats .st-label {
+  grid-column: auto;
+  font-size: 0.8rem;
+}
+.stats .st-label .faint {
+  display: none;
+}
+.stats .st-wdl {
+  gap: 6px;
+}
+.stats .st-wdl-n {
+  font-size: 0.7rem;
+}
+.stats .st-score {
+  font-size: 0.82rem;
+}
+.stats .st-sub {
+  font-size: 0.68rem;
+  margin-top: 2px;
+}
+.stats .st-ends {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.stats .st-end-head {
+  font-size: 0.78rem;
+  margin-bottom: 2px;
+}
+.stats .st-end-row {
+  grid-template-columns: 1fr auto;
+  gap: 4px;
+  font-size: 0.74rem;
+  padding: 1px 0;
+}
+.stats .st-end-row .meter {
+  display: none;
+}
+.stats .st-tr {
+  padding: 4px 0;
+  font-size: 0.82rem;
+}
+.stats .st-tr.head {
+  font-size: 0.66rem;
+}
+.stats .st-note,
+.stats p.st-note {
+  font-size: 0.7rem;
+}
+.stats .ins-pattern {
+  padding: 8px 10px;
+}
+.stats .ins-pattern p {
+  font-size: 0.8rem;
+  margin: 4px 0 0;
+}
+.stats .st-think {
+  margin-top: 6px;
+  padding: 8px 12px;
+}
+.st-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.st-top h1 {
+  margin: 0;
+  font-size: 1.35rem;
+  flex: 1;
+}
+.st-sub-line {
+  margin: 4px 0 6px;
+  font-size: 0.76rem;
+}
+.st-tabs button {
+  font-size: 0.78rem;
+  padding: 8px 2px;
+}
+.stats .st-tr {
+  padding: 3px 0;
+}
+.stats .st-table.q .st-tr,
+.stats .st-table.p .st-tr {
+  font-size: 0.8rem;
+}
+.stats .section-title {
+  margin: 10px 0 5px;
+}
+.stats .st-trend svg {
+  height: 36px !important;
+}
+.stats .st-think {
+  margin-top: 4px;
+  padding: 6px 12px;
+}
+.stats .st-think .faint {
+  display: none;
+}

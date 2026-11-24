@@ -107,7 +107,8 @@ export async function judgeYourMove(startFen: string, moves: string[], you: Colo
   }
   // A real mistake: say what it allows, what was better, and offer the move back.
   const allows =
-    inMyWords(warningText(before, after, you, uci, mv.san)) || (ep < 0.3 ? 'This gives the game away.' : 'This throws away your advantage.');
+    shortenLines(inMyWords(warningText(before, after, you, uci, mv.san))) ||
+    (ep < 0.3 ? 'This gives the game away.' : 'This throws away your advantage.');
   const idea = bestIdeaSentence(before, you, epBefore);
   return {
     ...base,
@@ -115,6 +116,30 @@ export async function judgeYourMove(startFen: string, moves: string[], you: Colo
     takeBack: true,
     text: `Careful. ${allows} ${idea ? `Better was ${idea}` : `Better was ${bestSan}.`} Take it back and try again?`,
   };
+}
+
+/** "… after 3... Kxf7 4. d4 Ke8 5. e5 g6 6. dxc5." -> "… after 3... Kxf7 4. d4…" (the first two moves of a line). */
+export function shortenLines(text: string, keep = 2): string {
+  const i = text.indexOf(' after ');
+  if (i < 0) return text;
+  const rest = text.slice(i + 7).split(' ');
+  const out: string[] = [];
+  let sans = 0;
+  let j = 0;
+  for (; j < rest.length; j++) {
+    const t = rest[j];
+    const isNum = /^\d+\.+$/.test(t);
+    const ends = !isNum && t.endsWith('.');
+    if (!isNum) sans++;
+    if (sans <= keep) out.push(ends ? t.slice(0, -1) : t);
+    if (ends) {
+      j++;
+      break;
+    }
+  }
+  while (out.length && /^\d+\.+$/.test(out[out.length - 1])) out.pop();
+  const tail = j < rest.length ? ` ${rest.slice(j).join(' ')}` : '';
+  return `${text.slice(0, i)} after ${out.join(' ')}${sans > keep ? '…' : '.'}${tail}`;
 }
 
 /** The review speaks of "your opponent"; Sensei is your opponent. */

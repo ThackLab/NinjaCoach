@@ -285,7 +285,6 @@ function SenseiBoard() {
   const last = g.moves.at(-1);
   const notes = g.notes;
   const latest = notes.at(-1);
-  const earlier = notes.length > 1 ? notes.at(-2) : undefined;
   const youWon = g.result && g.result !== '1/2-1/2' && (g.result === '1-0') === (g.you === 'w');
   const newElo = useSensei((s) => s.elo);
   const orientation = g.you === 'w' ? 'white' : 'black';
@@ -343,11 +342,6 @@ function SenseiBoard() {
             </div>
           ) : (
             <>
-              {earlier && (
-                <div className={`sensei-say past ${earlier.tone}`}>
-                  {earlier.san && <San san={earlier.san} chip />} <Rich text={earlier.text} />
-                </div>
-              )}
               {latest && (
                 <div className={`sensei-say ${latest.tone}`}>
                   <span className="sensei-face small">{FACE}</span>

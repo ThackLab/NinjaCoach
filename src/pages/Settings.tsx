@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Segmented, Toggle, toast } from '../components/Widgets';
-import { canUseThreads, hardwareThreads } from '../lib/engine/manager';
+import { Toggle, toast } from '../components/Widgets';
 import { importAll, wipeAll, type Backup } from '../lib/storage/db';
 import { backupNow } from '../lib/backup';
 import { useSettings } from '../state/settings';
@@ -25,7 +24,6 @@ export function SettingsPage() {
   const s = useSettings();
   const sync = useSync();
   const [name, setName] = useState(sync.username);
-  const threads = canUseThreads();
   const [exempt, setExempt] = useState(isBatteryExempt);
   useEffect(() => {
     const look = () => document.visibilityState === 'visible' && setExempt(isBatteryExempt());
@@ -59,10 +57,7 @@ export function SettingsPage() {
       <div className="settings-grid">
         <section className="card">
           <h2>chess.com</h2>
-          <Row
-            title="Your username"
-            desc={`Your coach keeps this player's ${sync.keep ? `last ${sync.keep}` : 'every'} games on chess.com. Change how many on the Stats screen.`}
-          >
+          <Row title="Your username" desc="The chess.com player whose games your coach reviews.">
             <form
               className="row"
               onSubmit={(e) => {
@@ -87,27 +82,13 @@ export function SettingsPage() {
         </section>
 
         <section className="card">
-          <h2>Board</h2>
-          <Row title="Coordinates">
-            <Toggle checked={s.coordinates} onChange={(coordinates) => s.set({ coordinates })} />
-          </Row>
-          <Row title="Show legal moves">
-            <Toggle checked={s.showLegalMoves} onChange={(showLegalMoves) => s.set({ showLegalMoves })} />
-          </Row>
-          <Row title="Animations">
-            <Toggle checked={s.animation} onChange={(animation) => s.set({ animation })} />
-          </Row>
-          <Row title="Always promote to queen">
-            <Toggle checked={s.autoQueen} onChange={(autoQueen) => s.set({ autoQueen })} />
-          </Row>
-          <Row title="Sound effects">
-            <Toggle checked={s.sound} onChange={(sound) => s.set({ sound })} />
-          </Row>
+          <h2>Reviews</h2>
+          <p className="muted" style={{ fontSize: '0.88rem' }}>
+            Every game gets a quick review on its own: each move checked fast, then the key moments (brilliant, great, mistakes, misses, blunders)
+            checked again more deeply. For a full deep analysis of a game, open it and tap Run a deep analysis on its Summary tab.
+          </p>
           {canWorkLocked && (
-            <Row
-              title="Keep reviewing with the phone locked"
-              desc="Reviews carry on with the screen off, with a notification while they run. Turn it off to save battery: reviews then pause until you open the app."
-            >
+            <Row title="Keep reviewing with the phone locked" desc="With a notification while it works. Off: reviews pause until you open the app.">
               <Toggle checked={s.lockedReviews} onChange={(lockedReviews) => s.set({ lockedReviews })} />
             </Row>
           )}
@@ -116,8 +97,8 @@ export function SettingsPage() {
               title="Let it run in the background"
               desc={
                 exempt
-                  ? 'Done: Android leaves Ninja Coach out of battery saving. On a Samsung, also check Settings → Apps → Ninja Coach → Battery → Unrestricted.'
-                  : 'Android pauses apps to save battery once the phone has been locked a while. Allow Ninja Coach to keep going. On a Samsung, also set Settings → Apps → Ninja Coach → Battery → Unrestricted.'
+                  ? 'Allowed. On a Samsung, also set Settings → Apps → Ninja Coach → Battery → Unrestricted.'
+                  : 'So Android doesn’t pause it once the phone has been locked a while. On a Samsung, also set Battery to Unrestricted for the app.'
               }
             >
               {exempt ? (
@@ -135,79 +116,24 @@ export function SettingsPage() {
               )}
             </Row>
           )}
-          <Row
-            title="Keep the screen on while reviewing"
-            desc="So the review doesn't stop when the phone goes to sleep. It sleeps as usual once the reviews are done."
-          >
+          <Row title="Keep the screen on while reviewing">
             <Toggle checked={s.keepAwake} onChange={(keepAwake) => s.set({ keepAwake })} />
           </Row>
+        </section>
+
+        <section className="card">
+          <h2>Board and sound</h2>
+          <Row title="Coordinates">
+            <Toggle checked={s.coordinates} onChange={(coordinates) => s.set({ coordinates })} />
+          </Row>
+          <Row title="Sound effects">
+            <Toggle checked={s.sound} onChange={(sound) => s.set({ sound })} />
+          </Row>
           {canVibrate && (
-            <Row title="Vibration" desc="A light tap for every move, a buzz for a mistake">
+            <Row title="Vibration">
               <Toggle checked={s.haptics} onChange={(haptics) => s.set({ haptics })} />
             </Row>
           )}
-        </section>
-
-        <section className="card">
-          <h2>Game review</h2>
-          <Row
-            title="How games are reviewed"
-            desc="Every game gets a quick review on its own: each move checked fast, and the key moments (brilliant, great, mistakes, misses, blunders) checked again more deeply. For a full deep analysis of a game, open it and tap Run a deep analysis on its Summary tab."
-          >
-            <span />
-          </Row>
-          <h2 style={{ marginTop: 18 }}>Analysis engine</h2>
-          <Row
-            title="Threads"
-            desc={
-              threads
-                ? `Multi-threaded engine available (${hardwareThreads()} cores)`
-                : 'This host does not allow multi-threading; the single-threaded engine is used'
-            }
-          >
-            <input
-              type="number"
-              min={1}
-              max={hardwareThreads()}
-              value={s.engineThreads}
-              disabled={!threads}
-              onChange={(e) => s.set({ engineThreads: Math.max(1, Math.min(hardwareThreads(), +e.target.value || 1)) })}
-              style={{ width: 70 }}
-            />
-          </Row>
-          <Row title="Hash (MB)">
-            <Segmented
-              value={s.engineHash}
-              onChange={(engineHash) => s.set({ engineHash })}
-              options={[32, 64, 128, 256].map((v) => ({ value: v, label: v }))}
-            />
-          </Row>
-          <Row title="Best-move arrows on the analysis board">
-            <Toggle checked={s.showArrows} onChange={(showArrows) => s.set({ showArrows })} />
-          </Row>
-        </section>
-
-        <section className="card">
-          <h2>AI coach (optional)</h2>
-          <p className="muted" style={{ fontSize: '0.88rem' }}>
-            Ask follow-up questions about your reviewed games in plain English. Answers come from Claude, grounded in the Stockfish review. You need
-            your own key from{' '}
-            <a href="https://console.anthropic.com/" target="_blank" rel="noreferrer">
-              console.anthropic.com
-            </a>
-            ; usage is billed to your Anthropic account (typically a few cents per question). The key is stored only in this browser and sent only to
-            the Anthropic API.
-          </p>
-          <Row title="Anthropic API key">
-            <input
-              type="password"
-              autoComplete="off"
-              placeholder="sk-ant-…"
-              value={s.aiCoachKey}
-              onChange={(e) => s.set({ aiCoachKey: e.target.value.trim() })}
-              style={{ width: 220 }}
-            />
-          </Row>
         </section>
 
         <section className="card">

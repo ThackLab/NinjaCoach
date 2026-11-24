@@ -6,7 +6,6 @@ import type { Key } from 'chessground/types';
 import { Board, type PromotionPiece } from '../components/Board';
 import { ClassIcon, boardBadge } from '../components/ClassIcon';
 import { MoveList, MoveStrip } from '../components/MoveList';
-import { AiCoachChat } from '../components/AiCoachChat';
 import { EvalBar, EvalGraph, PlayerBar, ScoreChip, Segmented, type GraphPoint } from '../components/Widgets';
 import { getAnalysisEngine } from '../lib/engine/manager';
 import { formatLine, legalDests, moveToUci, playUci } from '../lib/chess/utils';
@@ -148,10 +147,9 @@ export function ReviewPage({
   const [cur, setCur] = useState(-1);
   const [flipped, setFlipped] = useState(false);
   // The panel under the board, one named tab at a time instead of one long scroll.
-  const [tab, setTab] = useState<'coach' | 'summary' | 'moves' | 'ask'>('coach');
-  const aiKey = useSettings((st) => st.aiCoachKey);
+  const [tab, setTab] = useState<'coach' | 'summary' | 'moves'>('coach');
   // Stepping to another move brings the coach back.
-  useEffect(() => setTab((t) => (t === 'ask' ? t : 'coach')), [cur]);
+  useEffect(() => setTab('coach'), [cur]);
   const [showBest, setShowBest] = useState(true);
   const [line, setLine] = useState<{ base: string; moves: string[]; idx: number } | null>(null);
   const [retry, setRetry] = useState<RetryState | null>(null);
@@ -1063,13 +1061,17 @@ export function ReviewPage({
 
         {review && !guided && !intro && (
           <div className="rv-tabs" role="tablist">
-            {([['coach', 'Coach'], ['summary', 'Summary'], ['moves', 'Moves'], ...(aiKey ? [['ask', 'Ask']] : [])] as [typeof tab, string][]).map(
-              ([k, label]) => (
-                <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>
-                  {label}
-                </button>
-              ),
-            )}
+            {(
+              [
+                ['coach', 'Coach'],
+                ['summary', 'Summary'],
+                ['moves', 'Moves'],
+              ] as [typeof tab, string][]
+            ).map(([k, label]) => (
+              <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>
+                {label}
+              </button>
+            ))}
           </div>
         )}
 
@@ -1171,12 +1173,6 @@ export function ReviewPage({
                 }}
                 classes={moves.map((x) => x.classification)}
               />
-            </div>
-          )}
-
-          {review && !guided && !intro && tab === 'ask' && (
-            <div style={{ marginTop: 4 }}>
-              <AiCoachChat key={gameId} game={game} review={review} ply={cur} />
             </div>
           )}
         </div>

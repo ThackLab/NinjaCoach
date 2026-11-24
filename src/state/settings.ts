@@ -56,8 +56,6 @@ export interface Settings {
   engineHash: number;
   analysisLines: number;
   showArrows: boolean;
-  /** Anthropic API key for the optional AI coach (stored only in this browser). */
-  aiCoachKey: string;
   set: (patch: Partial<Omit<Settings, 'set'>>) => void;
 }
 
@@ -98,7 +96,6 @@ export const useSettings = create<Settings>()(
       engineHash: 64,
       analysisLines: 3,
       showArrows: true,
-      aiCoachKey: '',
       set: (patch) => set(patch),
     }),
     {
